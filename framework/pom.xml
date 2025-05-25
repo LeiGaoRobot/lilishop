@@ -16,15 +16,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.qiniu</groupId>
-            <artifactId>qiniu-java-sdk</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.qiniu</groupId>
-            <artifactId>qiniu-java-sdk</artifactId>
-            <version>7.4.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-properties-migrator</artifactId>
             <scope>runtime</scope>
@@ -224,11 +215,6 @@
                     <groupId>org.bouncycastle</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <!--脚本编程-->
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy</artifactId>
         </dependency>
         <!-- rocketmq-spring-boot-starter -->
         <dependency>
