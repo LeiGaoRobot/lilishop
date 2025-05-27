@@ -572,6 +572,112 @@ public class CartServiceImpl implements CartService {
         if (tradeDTO.getStoreAddress() == null && tradeDTO.getMemberAddress() == null && !GoodsTypeEnum.VIRTUAL_GOODS.name().equals(tradeDTO.getCheckedSkuList().get(0).getGoodsSku().getGoodsType())) {
             throw new ServiceException(ResultCode.MEMBER_ADDRESS_NOT_EXIST);
         }
+
+        // Re-validate coupons before creating the trade
+        // 1. Refresh SKU prices in tradeDTO
+        for (CartSkuVO cartSkuVO : tradeDTO.getSkuList()) {
+            GoodsSku freshGoodsSku = goodsSkuService.getGoodsSkuByIdFromCache(cartSkuVO.getGoodsSku().getId());
+            if (freshGoodsSku != null && GoodsStatusEnum.UPPER.name().equals(freshGoodsSku.getMarketEnable()) && GoodsAuthEnum.PASS.name().equals(freshGoodsSku.getAuthFlag())) {
+                cartSkuVO.setGoodsSku(freshGoodsSku); // Update the whole Sku object
+                cartSkuVO.setPurchasePrice(freshGoodsSku.getPrice()); // Update purchase price, assuming it should be the current price
+                // cartSkuVO.getGoodsSku().setPrice(freshGoodsSku.getPrice()); // Already set by setGoodsSku
+            } else {
+                // If a SKU is invalid, this might affect coupon validity.
+                // Mark as invalid or handle as per broader application logic.
+                // For now, price refresh is the focus. Subsequent coupon logic will handle ineligibility.
+                log.warn("SKU {} is no longer valid or available. It might affect coupon validation.", cartSkuVO.getGoodsSku().getId());
+            }
+        }
+
+        // 2. Re-validate Platform Coupon
+        if (tradeDTO.getPlatformCoupon() != null) {
+            MemberCoupon platformMemberCoupon = memberCouponService.getById(tradeDTO.getPlatformCoupon().getMemberCoupon().getId());
+            if (platformMemberCoupon == null || !MemberCouponStatusEnum.NEW.name().equals(platformMemberCoupon.getStatus())) {
+                tradeDTO.setPlatformCoupon(null);
+            } else {
+                // Recalculate eligible total for platform coupon
+                List<CartSkuVO> eligibleSkusForPlatformCoupon = checkCoupon(platformMemberCoupon, tradeDTO);
+                double platformCouponEligiblePrice = 0d;
+                Map<String, Double> platformSkuDetail = new HashMap<>();
+
+                for (CartSkuVO cartSkuVO : eligibleSkusForPlatformCoupon) {
+                    if (Boolean.FALSE.equals(cartSkuVO.getChecked())) {
+                        continue;
+                    }
+                     // Check if SKU is still valid after price refresh
+                    GoodsSku currentSku = cartSkuVO.getGoodsSku();
+                    if (currentSku == null || !GoodsStatusEnum.UPPER.name().equals(currentSku.getMarketEnable()) || !GoodsAuthEnum.PASS.name().equals(currentSku.getAuthFlag())) {
+                        tradeDTO.setPlatformCoupon(null); // Invalidate coupon if essential SKU is gone
+                        platformCouponEligiblePrice = -1; // Mark as invalid
+                        break; 
+                    }
+
+                    double price = (cartSkuVO.getPromotionMap() != null && !cartSkuVO.getPromotionMap().isEmpty() &&
+                                    (cartSkuVO.getPromotionMap().keySet().stream().anyMatch(i -> i.contains(PromotionTypeEnum.PINTUAN.name()) || i.contains(PromotionTypeEnum.SECKILL.name()))))
+                                   ? cartSkuVO.getPurchasePrice() : cartSkuVO.getGoodsSku().getPrice();
+                    platformCouponEligiblePrice = CurrencyUtil.add(platformCouponEligiblePrice, CurrencyUtil.mul(price, cartSkuVO.getNum()));
+                    platformSkuDetail.put(cartSkuVO.getGoodsSku().getId(), CurrencyUtil.mul(price, cartSkuVO.getNum()));
+                }
+
+                if (platformCouponEligiblePrice != -1 && platformCouponEligiblePrice >= platformMemberCoupon.getConsumeThreshold()) {
+                    tradeDTO.getPlatformCoupon().setMemberCoupon(platformMemberCoupon); // Update with fresh coupon data
+                    tradeDTO.getPlatformCoupon().setSkuDetail(platformSkuDetail);
+                } else {
+                    tradeDTO.setPlatformCoupon(null);
+                }
+            }
+        }
+
+        // 3. Re-validate Store Coupons
+        if (tradeDTO.getStoreCoupons() != null && !tradeDTO.getStoreCoupons().isEmpty()) {
+            Iterator<Map.Entry<String, MemberCouponDTO>> storeCouponsIterator = tradeDTO.getStoreCoupons().entrySet().iterator();
+            while (storeCouponsIterator.hasNext()) {
+                Map.Entry<String, MemberCouponDTO> entry = storeCouponsIterator.next();
+                MemberCouponDTO storeMemberCouponDTO = entry.getValue();
+                MemberCoupon storeMemberCoupon = memberCouponService.getById(storeMemberCouponDTO.getMemberCoupon().getId());
+
+                if (storeMemberCoupon == null || !MemberCouponStatusEnum.NEW.name().equals(storeMemberCoupon.getStatus())) {
+                    storeCouponsIterator.remove();
+                    continue;
+                }
+
+                List<CartSkuVO> eligibleSkusForStoreCoupon = checkCoupon(storeMemberCoupon, tradeDTO);
+                double storeCouponEligiblePrice = 0d;
+                Map<String, Double> storeSkuDetail = new HashMap<>();
+                boolean essentialSkuInvalid = false;
+
+                for (CartSkuVO cartSkuVO : eligibleSkusForStoreCoupon) {
+                    if (Boolean.FALSE.equals(cartSkuVO.getChecked())) {
+                        continue;
+                    }
+                    // Check if SKU is still valid after price refresh
+                    GoodsSku currentSku = cartSkuVO.getGoodsSku();
+                     if (currentSku == null || !GoodsStatusEnum.UPPER.name().equals(currentSku.getMarketEnable()) || !GoodsAuthEnum.PASS.name().equals(currentSku.getAuthFlag())) {
+                        essentialSkuInvalid = true;
+                        break; 
+                    }
+
+                    double price = (cartSkuVO.getPromotionMap() != null && !cartSkuVO.getPromotionMap().isEmpty() &&
+                                    (cartSkuVO.getPromotionMap().keySet().stream().anyMatch(i -> i.contains(PromotionTypeEnum.PINTUAN.name()) || i.contains(PromotionTypeEnum.SECKILL.name()))))
+                                   ? cartSkuVO.getPurchasePrice() : cartSkuVO.getGoodsSku().getPrice();
+                    storeCouponEligiblePrice = CurrencyUtil.add(storeCouponEligiblePrice, CurrencyUtil.mul(price, cartSkuVO.getNum()));
+                    storeSkuDetail.put(cartSkuVO.getGoodsSku().getId(), CurrencyUtil.mul(price, cartSkuVO.getNum()));
+                }
+                
+                if (essentialSkuInvalid) {
+                    storeCouponsIterator.remove();
+                    continue;
+                }
+
+                if (storeCouponEligiblePrice >= storeMemberCoupon.getConsumeThreshold()) {
+                    storeMemberCouponDTO.setMemberCoupon(storeMemberCoupon); // Update with fresh coupon data
+                    storeMemberCouponDTO.setSkuDetail(storeSkuDetail);
+                } else {
+                    storeCouponsIterator.remove();
+                }
+            }
+        }
+
         //构建交易
         Trade trade = tradeBuilder.createTrade(tradeDTO);
         this.cleanChecked(this.readDTO(cartTypeEnum));
