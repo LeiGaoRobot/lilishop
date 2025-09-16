@@ -3,18 +3,20 @@ package cn.lili.security;
 import cn.lili.cache.Cache;
 import cn.lili.common.properties.IgnoredUrlsProperties;
 import cn.lili.common.security.CustomAccessDeniedHandler;
-import cn.lili.common.utils.SpringContextUtil;
 import cn.lili.modules.member.service.ClerkService;
 import cn.lili.modules.member.service.StoreMenuRoleService;
 import cn.lili.modules.member.token.StoreTokenGenerate;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
@@ -25,68 +27,51 @@ import org.springframework.web.cors.CorsConfigurationSource;
  */
 @Slf4j
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
-public class StoreSecurityConfig extends WebSecurityConfigurerAdapter {
+@EnableMethodSecurity(prePostEnabled = true)
+@RequiredArgsConstructor
+public class StoreSecurityConfig {
 
-    /**
-     * 忽略验权配置
-     */
-    @Autowired
-    private IgnoredUrlsProperties ignoredUrlsProperties;
+    private final IgnoredUrlsProperties ignoredUrlsProperties;
 
-    /**
-     * spring security -》 权限不足处理
-     */
-    @Autowired
-    private CustomAccessDeniedHandler accessDeniedHandler;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    @Autowired
-    private Cache<String> cache;
+    private final Cache<Object> cache;
 
-    @Autowired
-    private StoreTokenGenerate storeTokenGenerate;
+    private final StoreTokenGenerate storeTokenGenerate;
 
-    @Autowired
-    private StoreMenuRoleService storeMenuRoleService;
+    private final StoreMenuRoleService storeMenuRoleService;
 
-    @Autowired
-    private ClerkService clerkService;
+    private final ClerkService clerkService;
+
+    private final CorsConfigurationSource corsConfigurationSource;
 
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    @Bean
+    public StoreAuthenticationFilter storeAuthenticationFilter() {
+        return new StoreAuthenticationFilter(storeTokenGenerate, storeMenuRoleService, clerkService, cache);
+    }
 
-        ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry registry = http
-                .authorizeRequests();
-        //配置的url 不需要授权
-        for (String url : ignoredUrlsProperties.getUrls()) {
-            registry.antMatchers(url).permitAll();
-        }
-        registry.and()
-                //禁止网页iframe
-                .headers().frameOptions().disable()
-                .and()
-                .logout()
-                .permitAll()
-                .and()
-                .authorizeRequests()
-                //任何请求
-                .anyRequest()
-                //需要身份认证
-                .authenticated()
-                .and()
-                //允许跨域
-                .cors().configurationSource((CorsConfigurationSource) SpringContextUtil.getBean("corsConfigurationSource")).and()
-                //关闭跨站请求防护
-                .csrf().disable()
-                //前后端分离采用JWT 不需要session
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                //自定义权限拒绝处理类
-                .exceptionHandling().accessDeniedHandler(accessDeniedHandler)
-                .and()
-                //添加JWT认证过滤器
-                .addFilter(new StoreAuthenticationFilter(authenticationManager(), storeTokenGenerate, storeMenuRoleService, clerkService, cache));
+    @Bean
+    public SecurityFilterChain storeSecurityFilterChain(HttpSecurity http) throws Exception {
+
+        http
+                .authorizeHttpRequests(authorize -> {
+                    if (ignoredUrlsProperties.getUrls() != null) {
+                        for (String url : ignoredUrlsProperties.getUrls()) {
+                            authorize.requestMatchers(url).permitAll();
+                        }
+                    }
+                    authorize.anyRequest().authenticated();
+                })
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .logout(logout -> logout.permitAll())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(handler -> handler.accessDeniedHandler(accessDeniedHandler));
+
+        http.addFilterBefore(storeAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        return http.build();
     }
 
 }
