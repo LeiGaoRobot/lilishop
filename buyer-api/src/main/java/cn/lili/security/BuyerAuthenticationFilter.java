@@ -13,18 +13,16 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,24 +37,14 @@ import java.util.List;
  * @since
  */
 @Slf4j
-public class BuyerAuthenticationFilter extends BasicAuthenticationFilter {
-
+public class BuyerAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * 缓存
      */
-    @Autowired
-    private Cache cache;
+    private final Cache<String> cache;
 
-    /**
-     * 自定义构造器
-     *
-     * @param authenticationManager
-     * @param cache
-     */
-    public BuyerAuthenticationFilter(AuthenticationManager authenticationManager,
-                                     Cache cache) {
-        super(authenticationManager);
+    public BuyerAuthenticationFilter(Cache<String> cache) {
         this.cache = cache;
     }
 
@@ -99,7 +87,7 @@ public class BuyerAuthenticationFilter extends BasicAuthenticationFilter {
             AuthUser authUser = new Gson().fromJson(json, AuthUser.class);
 
             //校验redis中是否有权限
-            if (cache.hasKey(CachePrefix.ACCESS_TOKEN.getPrefix(UserEnums.MEMBER,authUser.getId()) + jwt)) {
+            if (cache.hasKey(CachePrefix.ACCESS_TOKEN.getPrefix(UserEnums.MEMBER, authUser.getId()) + jwt)) {
                 //构造返回信息
                 List<GrantedAuthority> auths = new ArrayList<>();
                 auths.add(new SimpleGrantedAuthority("ROLE_" + authUser.getRole().name()));

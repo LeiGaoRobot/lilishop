@@ -16,21 +16,20 @@ import com.google.gson.Gson;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.naming.NoPermissionException;
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,27 +40,24 @@ import java.util.Map;
  * @author Chopper
  */
 @Slf4j
-public class ManagerAuthenticationFilter extends BasicAuthenticationFilter {
+public class ManagerAuthenticationFilter extends OncePerRequestFilter {
 
-    private final Cache cache;
+    private final Cache<Object> cache;
 
     public final MenuService menuService;
 
     private final ManagerTokenGenerate managerTokenGenerate;
 
-    public ManagerAuthenticationFilter(AuthenticationManager authenticationManager,
-                                       MenuService menuService,
+    public ManagerAuthenticationFilter(MenuService menuService,
                                        ManagerTokenGenerate managerTokenGenerate,
-                                       Cache cache) {
-        super(authenticationManager);
+                                       Cache<Object> cache) {
         this.cache = cache;
         this.menuService = menuService;
         this.managerTokenGenerate = managerTokenGenerate;
     }
 
-    @SneakyThrows
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
 
         //从header中获取jwt
         String jwt = request.getHeader(SecurityEnum.HEADER_TOKEN.getValue());
@@ -75,7 +71,9 @@ public class ManagerAuthenticationFilter extends BasicAuthenticationFilter {
         UsernamePasswordAuthenticationToken authentication = getAuthentication(jwt, response);
         //自定义权限过滤
         if (authentication != null) {
-            customAuthentication(request, response, authentication);
+            if (!customAuthentication(request, response, authentication)) {
+                return;
+            }
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         chain.doFilter(request, response);
@@ -88,7 +86,7 @@ public class ManagerAuthenticationFilter extends BasicAuthenticationFilter {
      * @param response       响应
      * @param authentication 用户信息
      */
-    private void customAuthentication(HttpServletRequest request, HttpServletResponse response, UsernamePasswordAuthenticationToken authentication) throws NoPermissionException {
+    private boolean customAuthentication(HttpServletRequest request, HttpServletResponse response, UsernamePasswordAuthenticationToken authentication) throws IOException {
         AuthUser authUser = (AuthUser) authentication.getDetails();
         String requestUrl = request.getRequestURI();
 
@@ -106,12 +104,11 @@ public class ManagerAuthenticationFilter extends BasicAuthenticationFilter {
             //获取数据(GET 请求)权限
             if (request.getMethod().equals(RequestMethod.GET.name())) {
                 //如果用户的超级权限和查阅权限都不包含当前请求的api
-                if (match(permission.get(PermissionEnum.SUPER.name()), requestUrl) ||
-                        match(permission.get(PermissionEnum.QUERY.name()), requestUrl)) {
-                } else {
+                if (!(match(permission.get(PermissionEnum.SUPER.name()), requestUrl) ||
+                        match(permission.get(PermissionEnum.QUERY.name()), requestUrl))) {
                     ResponseUtil.output(response, ResponseUtil.resultMap(false, 400, "权限不足"));
                     log.error("当前请求路径：{},所拥有权限：{}", requestUrl, JSONUtil.toJsonStr(permission));
-                    throw new NoPermissionException("权限不足");
+                    return false;
                 }
             }
             //非get请求（数据操作） 判定鉴权
@@ -119,10 +116,11 @@ public class ManagerAuthenticationFilter extends BasicAuthenticationFilter {
                 if (!match(permission.get(PermissionEnum.SUPER.name()), requestUrl)) {
                     ResponseUtil.output(response, ResponseUtil.resultMap(false, 400, "权限不足"));
                     log.error("当前请求路径：{},所拥有权限：{}", requestUrl, JSONUtil.toJsonStr(permission));
-                    throw new NoPermissionException("权限不足");
+                    return false;
                 }
             }
         }
+        return true;
     }
 
     /**
