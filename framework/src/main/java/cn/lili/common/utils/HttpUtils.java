@@ -176,13 +176,14 @@ public class HttpUtils {
             //读取响应
             reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
             String line;
-            String res = "";
+            // ⚡ Bolt: Use StringBuilder instead of String concatenation in loop for O(N) performance
+            StringBuilder res = new StringBuilder();
             while ((line = reader.readLine()) != null) {
-                res += line;
+                res.append(line);
             }
             reader.close();
 
-            return res;
+            return res.toString();
         } catch (IOException e) {
             log.error("post请求错误", e);
         }
@@ -223,13 +224,14 @@ public class HttpUtils {
             //读取响应
             reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
             String line;
-            String res = "";
+            // ⚡ Bolt: Use StringBuilder instead of String concatenation in loop for O(N) performance
+            StringBuilder res = new StringBuilder();
             while ((line = reader.readLine()) != null) {
-                res += line;
+                res.append(line);
             }
             reader.close();
 
-            return res;
+            return res.toString();
         } catch (IOException e) {
             log.error("post错误", e);
         }
