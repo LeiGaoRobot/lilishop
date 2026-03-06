@@ -370,12 +370,8 @@ public class CartServiceImpl implements CartService {
                 }
             }
 
-            List<String> storeIds = new ArrayList<>();
-            for (CartSkuVO cartSkuVO : tradeDTO.getSkuList()) {
-                if (!storeIds.contains(cartSkuVO.getStoreId())) {
-                    storeIds.add(cartSkuVO.getStoreId());
-                }
-            }
+            // ⚡ Bolt: Use Stream distinct() for faster and more readable uniqueness filtering instead of an O(n^2) ArrayList contains() loop.
+            List<String> storeIds = tradeDTO.getSkuList().stream().map(CartSkuVO::getStoreId).distinct().collect(Collectors.toList());
 
             //获取可操作的优惠券集合
             List<MemberCoupon> allScopeMemberCoupon = memberCouponService.getAllScopeMemberCoupon(tradeDTO.getMemberId(), storeIds);
