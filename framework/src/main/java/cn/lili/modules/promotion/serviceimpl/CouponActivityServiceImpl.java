@@ -340,14 +340,34 @@ public class CouponActivityServiceImpl extends AbstractPromotionsServiceImpl<Cou
      * @param couponActivityItems 优惠券列表
      */
     private void sendCoupon(List<Map<String, Object>> memberList, List<CouponActivityItem> couponActivityItems) {
-
-        for (Map<String, Object> map : memberList) {
-            AuthUser authUser = new AuthUser();
-            authUser.setId(map.get("id").toString());
-            authUser.setNickName(map.get("nick_name").toString());
-
-            sendCoupon(authUser, couponActivityItems);
-
+        // ⚡ Bolt: Batch coupon distributions to avoid N+1 queries.
+        for (CouponActivityItem couponActivityItem : couponActivityItems) {
+            //获取优惠券
+            Coupon coupon = couponService.getById(couponActivityItem.getCouponId());
+            //判断优惠券是否存在
+            if (coupon != null) {
+                List<MemberCoupon> memberCouponList = new ArrayList<>();
+                //循环优惠券的领取数量
+                int activitySendNum = couponActivityItem.getNum();
+                for (Map<String, Object> map : memberList) {
+                    for (int i = 1; i <= activitySendNum; i++) {
+                        MemberCoupon memberCoupon = new MemberCoupon(coupon);
+                        memberCoupon.setMemberId(map.get("id").toString());
+                        memberCoupon.setMemberName(map.get("nick_name").toString());
+                        memberCoupon.setMemberCouponStatus(MemberCouponStatusEnum.NEW.name());
+                        memberCoupon.setPlatformFlag(PromotionTools.PLATFORM_ID.equals(coupon.getStoreId()));
+                        memberCouponList.add(memberCoupon);
+                    }
+                }
+                if (!memberCouponList.isEmpty()) {
+                    //批量添加优惠券
+                    memberCouponService.saveBatch(memberCouponList);
+                    //添加优惠券已领取数量
+                    couponService.receiveCoupon(couponActivityItem.getCouponId(), memberCouponList.size());
+                }
+            } else {
+                log.error("赠送优惠券失败,当前优惠券不存在:" + couponActivityItem.getCouponId());
+            }
         }
     }
 
