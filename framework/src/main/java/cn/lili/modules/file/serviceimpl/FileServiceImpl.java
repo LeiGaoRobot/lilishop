@@ -37,8 +37,11 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements Fi
         queryWrapper.in(File::getId, ids);
 
         List<File> files = this.list(queryWrapper);
-        List<String> keys = new ArrayList<>();
-        files.forEach(item -> keys.add(item.getFileKey()));
+        // Pre-allocate ArrayList to avoid resizing overhead
+        List<String> keys = new ArrayList<>(files.size());
+        for (File item : files) {
+            keys.add(item.getFileKey());
+        }
         if (!keys.isEmpty()) {
             filePluginFactory.filePlugin().deleteFile(keys);
         }
@@ -51,8 +54,11 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements Fi
         queryWrapper.eq(File::getFileDirectoryId, directoryId);
 
         List<File> files = this.list(queryWrapper);
-        List<String> keys = new ArrayList<>();
-        files.forEach(item -> keys.add(item.getFileKey()));
+        // Pre-allocate ArrayList to avoid resizing overhead
+        List<String> keys = new ArrayList<>(files.size());
+        for (File item : files) {
+            keys.add(item.getFileKey());
+        }
         if (!keys.isEmpty()) {
             filePluginFactory.filePlugin().deleteFile(keys);
         }
@@ -84,8 +90,11 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements Fi
                 throw new ServiceException(ResultCode.USER_AUTHORITY_ERROR);
         }
         List<File> files = this.list(queryWrapper);
-        List<String> keys = new ArrayList<>();
-        files.forEach(item -> keys.add(item.getFileKey()));
+        // Pre-allocate ArrayList to avoid resizing overhead
+        List<String> keys = new ArrayList<>(files.size());
+        for (File item : files) {
+            keys.add(item.getFileKey());
+        }
         filePluginFactory.filePlugin().deleteFile(keys);
         this.remove(queryWrapper);
     }
