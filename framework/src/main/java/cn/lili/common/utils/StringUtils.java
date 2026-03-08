@@ -21,6 +21,9 @@ import java.util.regex.Pattern;
  */
 public class StringUtils extends StrUtil {
 
+    private static final String SPECIAL_CHART_REGEX = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+    private static final Pattern SPECIAL_CHART_PATTERN = Pattern.compile(SPECIAL_CHART_REGEX);
+
     /**
      * MD5加密方法
      *
@@ -168,9 +171,8 @@ public class StringUtils extends StrUtil {
      * @return
      */
     public static String filterSpecialChart(String str) {
-        String regEx = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
-        Pattern p = Pattern.compile(regEx);
-        Matcher m = p.matcher(str);
+        // ⚡ Bolt: Use pre-compiled static pattern to avoid recompiling on every invocation
+        Matcher m = SPECIAL_CHART_PATTERN.matcher(str);
         return m.replaceAll("").trim();
     }
 
