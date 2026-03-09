@@ -1,0 +1,3 @@
+## 2024-05-24 - Efficient distinct mapping & ComputeIfAbsent
+**Learning:** In Spring Boot projects with many explicit list operations, iterating over collections to manually filter duplicates with `.contains()` in `if` conditions takes O(n^2) time complexity. Using `.stream().map().distinct().collect()` drops it to O(n) or O(n log n). Furthermore, manually fetching and instantiating maps for non-existent keys `if (!map.containsKey(key))` is better replaced by `computeIfAbsent()` which avoids duplicate hashes lookup.
+**Action:** Replace `for` loop logic utilizing `.contains()` inside with stream equivalents and simplify manual list/map initialization loops with `computeIfAbsent` to improve speed and code conciseness.

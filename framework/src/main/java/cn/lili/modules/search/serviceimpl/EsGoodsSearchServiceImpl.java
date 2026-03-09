@@ -598,13 +598,8 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
                 valueList.add(value);
             }
             //将同一规格名下的规格值分组
-            if (!valueMap.containsKey(name)) {
-                List<String> values = new ArrayList<>();
-                values.add(value);
-                valueMap.put(name, values);
-            } else {
-                valueMap.get(name).add(value);
-            }
+            // Bolt: Avoid duplicate hash lookups by using computeIfAbsent instead of containsKey
+            valueMap.computeIfAbsent(name, k -> new ArrayList<>()).add(value);
         }
         //遍历所有的规格
         for (Map.Entry<String, List<String>> entry : valueMap.entrySet()) {
