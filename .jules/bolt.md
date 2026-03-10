@@ -1,0 +1,3 @@
+## 2024-05-24 - Avoid `Random` object creation and string concatenation inside loops for random string generation
+**Learning:** Instantiating `new Random()` on every method call combined with string concatenation inside a loop (`sRand += rand`) for generating random strings is inefficient. `String.valueOf()` conversion adds overhead, and the constant object creation stresses the garbage collector, impacting the performance of methods like `getRandStr`.
+**Action:** Replace `new Random()` with `ThreadLocalRandom.current()` for better performance, particularly in multi-threaded environments. Use `StringBuilder(capacity)` to construct strings within loops directly, avoiding unnecessary `String.valueOf()` calls.

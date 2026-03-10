@@ -11,6 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,13 +55,12 @@ public class StringUtils extends StrUtil {
      * @return
      */
     public static String getRandStr(int n) {
-        Random random = new Random();
-        String sRand = "";
+        // ⚡ Bolt: Use StringBuilder and ThreadLocalRandom to prevent unnecessary string and Random object allocations
+        StringBuilder sRand = new StringBuilder(n);
         for (int i = 0; i < n; i++) {
-            String rand = String.valueOf(random.nextInt(10));
-            sRand += rand;
+            sRand.append(ThreadLocalRandom.current().nextInt(10));
         }
-        return sRand;
+        return sRand.toString();
     }
 
     /**
