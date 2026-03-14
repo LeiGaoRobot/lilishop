@@ -36,7 +36,8 @@ public class StringUtils extends StrUtil {
             return null;
         }
         byte[] resultByte = messageDigest.digest(str.getBytes());
-        StringBuffer result = new StringBuffer();
+        // ⚡ Bolt: Use StringBuilder instead of StringBuffer since it's faster and synchronization is not needed here
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < resultByte.length; ++i) {
             int v = 0xFF & resultByte[i];
             if (v < 16) {
@@ -54,13 +55,14 @@ public class StringUtils extends StrUtil {
      * @return
      */
     public static String getRandStr(int n) {
-        Random random = new Random();
-        String sRand = "";
+        // ⚡ Bolt: Use ThreadLocalRandom to avoid thread contention and object creation overhead
+        java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
+        // ⚡ Bolt: Use pre-sized StringBuilder to avoid string concatenation in loop
+        StringBuilder sRand = new StringBuilder(n);
         for (int i = 0; i < n; i++) {
-            String rand = String.valueOf(random.nextInt(10));
-            sRand += rand;
+            sRand.append(random.nextInt(10));
         }
-        return sRand;
+        return sRand.toString();
     }
 
     /**
@@ -117,10 +119,11 @@ public class StringUtils extends StrUtil {
         if (str.length() == 1) {
             return str.toLowerCase();
         }
-        StringBuffer sb = new StringBuffer();
+        // ⚡ Bolt: Use StringBuilder instead of StringBuffer since it's faster and synchronization is not needed here
+        StringBuilder sb = new StringBuilder();
         for (int i = 1; i < str.length(); i++) {
             if (Character.isUpperCase(str.charAt(i))) {
-                sb.append("_" + Character.toLowerCase(str.charAt(i)));
+                sb.append("_").append(Character.toLowerCase(str.charAt(i)));
             } else {
                 sb.append(str.charAt(i));
             }
