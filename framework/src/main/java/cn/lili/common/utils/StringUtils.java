@@ -54,13 +54,12 @@ public class StringUtils extends StrUtil {
      * @return
      */
     public static String getRandStr(int n) {
-        Random random = new Random();
-        String sRand = "";
+        // ⚡ Bolt: Use ThreadLocalRandom for thread safety/performance, and StringBuilder instead of string concatenation in a loop to avoid creating multiple intermediate String objects
+        StringBuilder sRand = new StringBuilder();
         for (int i = 0; i < n; i++) {
-            String rand = String.valueOf(random.nextInt(10));
-            sRand += rand;
+            sRand.append(java.util.concurrent.ThreadLocalRandom.current().nextInt(10));
         }
-        return sRand;
+        return sRand.toString();
     }
 
     /**
