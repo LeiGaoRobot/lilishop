@@ -1,0 +1,3 @@
+## 2024-05-17 - String Concatenation Bottlenecks in Loops
+**Learning:** Found multiple instances of string concatenation using `+=` inside loops (e.g., `StringUtils.getRandStr()`) causing O(N^2) time complexity. Additionally, local StringBuffers were used where Thread safety wasn't needed, causing synchronization overhead.
+**Action:** Always replace `+=` inside loops with `StringBuilder`, and prefer `StringBuilder` over `StringBuffer` for local string building when thread-safety isn't required. Use `append(char)` instead of `append(String)` for single characters to avoid implicit string creation.
