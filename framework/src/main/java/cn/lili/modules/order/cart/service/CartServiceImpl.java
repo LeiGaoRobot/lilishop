@@ -730,16 +730,22 @@ public class CartServiceImpl implements CartService {
     private void checkGoodsSaleModel(GoodsSku dataSku, List<CartSkuVO> cartSkuVOS) {
         if (dataSku.getSalesModel().equals(GoodsSalesModeEnum.WHOLESALE.name())) {
             int numSum = 0;
-            List<CartSkuVO> sameGoodsIdSkuList = cartSkuVOS.stream().filter(i -> i.getGoodsSku().getGoodsId().equals(dataSku.getGoodsId())).collect(Collectors.toList());
-            if (CollUtil.isNotEmpty(sameGoodsIdSkuList)) {
-                numSum += sameGoodsIdSkuList.stream().mapToInt(CartSkuVO::getNum).sum();
+            // ⚡ Bolt: Use a single for-loop instead of multiple stream operations to reduce object allocation and iteration overhead in critical cart paths.
+            List<CartSkuVO> sameGoodsIdSkuList = new ArrayList<>();
+            for (CartSkuVO i : cartSkuVOS) {
+                if (i.getGoodsSku().getGoodsId().equals(dataSku.getGoodsId())) {
+                    sameGoodsIdSkuList.add(i);
+                    numSum += i.getNum();
+                }
             }
-            Wholesale match = wholesaleService.match(dataSku.getGoodsId(), numSum);
-            if (match != null) {
-                sameGoodsIdSkuList.forEach(i -> {
-                    i.setPurchasePrice(match.getPrice());
-                    i.setSubTotal(CurrencyUtil.mul(i.getPurchasePrice(), i.getNum()));
-                });
+            if (CollUtil.isNotEmpty(sameGoodsIdSkuList)) {
+                Wholesale match = wholesaleService.match(dataSku.getGoodsId(), numSum);
+                if (match != null) {
+                    sameGoodsIdSkuList.forEach(i -> {
+                        i.setPurchasePrice(match.getPrice());
+                        i.setSubTotal(CurrencyUtil.mul(i.getPurchasePrice(), i.getNum()));
+                    });
+                }
             }
         }
     }
