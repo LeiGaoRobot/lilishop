@@ -113,7 +113,17 @@ public class MemberCouponServiceImpl extends ServiceImpl<MemberCouponMapper, Mem
         QueryWrapper<MemberCoupon> queryWrapper = param.queryWrapper();
         Page<MemberCoupon> page = this.page(PageUtil.initPage(pageVo), queryWrapper);
         if (page.getRecords() != null && page.getRecords().size() > 0) {
-            if (page.getRecords().stream().anyMatch(i -> i.getEndTime().before(new Date()))) {
+            // ⚡ Bolt Performance Improvement
+            // Use traditional for-loop instead of stream().anyMatch() to avoid iteration overhead and closure allocation.
+            Date now = new Date();
+            boolean hasExpired = false;
+            for (MemberCoupon coupon : page.getRecords()) {
+                if (coupon.getEndTime() != null && coupon.getEndTime().before(now)) {
+                    hasExpired = true;
+                    break;
+                }
+            }
+            if (hasExpired) {
                 this.expireInvalidMemberCoupon(param.getMemberId());
                 return this.page(PageUtil.initPage(pageVo), queryWrapper);
             }
@@ -130,7 +140,19 @@ public class MemberCouponServiceImpl extends ServiceImpl<MemberCouponMapper, Mem
     @Override
     public List<MemberCoupon> getMemberCoupons(MemberCouponSearchParams param) {
         List<MemberCoupon> list = this.list(param.queryWrapper());
-        if (list.stream().anyMatch(i -> i.getEndTime().before(new Date()))) {
+        // ⚡ Bolt Performance Improvement
+        // Use traditional for-loop instead of stream().anyMatch() to avoid iteration overhead and closure allocation.
+        Date now = new Date();
+        boolean hasExpired = false;
+        if (list != null) {
+            for (MemberCoupon coupon : list) {
+                if (coupon.getEndTime() != null && coupon.getEndTime().before(now)) {
+                    hasExpired = true;
+                    break;
+                }
+            }
+        }
+        if (hasExpired) {
             this.expireInvalidMemberCoupon(param.getMemberId());
             return this.list(param.queryWrapper());
         }
