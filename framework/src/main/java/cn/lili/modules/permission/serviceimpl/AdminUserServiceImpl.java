@@ -69,19 +69,16 @@ public class AdminUserServiceImpl extends ServiceImpl<AdminUserMapper, AdminUser
         List<Role> roles = roleService.list();
         List<Department> departments = departmentService.list();
 
+        java.util.Map<String, String> departmentMap = departments.stream().collect(Collectors.toMap(Department::getId, Department::getTitle, (k1, k2) -> k1));
+        java.util.Map<String, Role> roleMap = roles.stream().collect(Collectors.toMap(Role::getId, r -> r, (k1, k2) -> k1));
+
         List<AdminUserVO> result = new ArrayList<>();
 
         adminUserPage.getRecords().forEach(adminUser -> {
             AdminUserVO adminUserVO = new AdminUserVO(adminUser);
             if (!CharSequenceUtil.isEmpty(adminUser.getDepartmentId())) {
                 try {
-                    adminUserVO.setDepartmentTitle(
-                            departments.stream().filter
-                                            (department -> department.getId().equals(adminUser.getDepartmentId()))
-                                    .collect(Collectors.toList())
-                                    .get(0)
-                                    .getTitle()
-                    );
+                    adminUserVO.setDepartmentTitle(departmentMap.get(adminUser.getDepartmentId()));
                 } catch (Exception e) {
                     log.debug("权限部门信息异常", e);
                 }
@@ -89,11 +86,14 @@ public class AdminUserServiceImpl extends ServiceImpl<AdminUserMapper, AdminUser
             if (!CharSequenceUtil.isEmpty(adminUser.getRoleIds())) {
                 try {
                     List<String> memberRoles = Arrays.asList(adminUser.getRoleIds().split(","));
-                    adminUserVO.setRoles(
-                            roles.stream().filter
-                                            (role -> memberRoles.contains(role.getId()))
-                                    .collect(Collectors.toList())
-                    );
+                    List<Role> userRoles = new ArrayList<>();
+                    for (String roleId : memberRoles) {
+                        Role role = roleMap.get(roleId);
+                        if (role != null) {
+                            userRoles.add(role);
+                        }
+                    }
+                    adminUserVO.setRoles(userRoles);
                 } catch (Exception e) {
                     log.debug("权限色信息异常", e);
                 }
