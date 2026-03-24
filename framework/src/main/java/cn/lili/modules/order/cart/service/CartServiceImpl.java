@@ -300,15 +300,9 @@ public class CartServiceImpl implements CartService {
     public void delete(String[] skuIds) {
         TradeDTO tradeDTO = this.readDTO(CartTypeEnum.CART);
         List<CartSkuVO> cartSkuVOS = tradeDTO.getSkuList();
-        List<CartSkuVO> deleteVos = new ArrayList<>();
-        for (CartSkuVO cartSkuVO : cartSkuVOS) {
-            for (String skuId : skuIds) {
-                if (cartSkuVO.getGoodsSku().getId().equals(skuId)) {
-                    deleteVos.add(cartSkuVO);
-                }
-            }
-        }
-        cartSkuVOS.removeAll(deleteVos);
+        // ⚡ Bolt: Use HashSet for O(M) lookup time instead of O(N*M) nested loop
+        Set<String> skuIdSet = new HashSet<>(Arrays.asList(skuIds));
+        cartSkuVOS.removeIf(cartSkuVO -> skuIdSet.contains(cartSkuVO.getGoodsSku().getId()));
         resetTradeDTO(tradeDTO);
     }
 
