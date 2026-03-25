@@ -732,7 +732,10 @@ public class CartServiceImpl implements CartService {
             int numSum = 0;
             List<CartSkuVO> sameGoodsIdSkuList = cartSkuVOS.stream().filter(i -> i.getGoodsSku().getGoodsId().equals(dataSku.getGoodsId())).collect(Collectors.toList());
             if (CollUtil.isNotEmpty(sameGoodsIdSkuList)) {
-                numSum += sameGoodsIdSkuList.stream().mapToInt(CartSkuVO::getNum).sum();
+                // ⚡ Bolt: Use a traditional for loop instead of streams to sum quantities
+                for (CartSkuVO cartSkuVO : sameGoodsIdSkuList) {
+                    numSum += cartSkuVO.getNum();
+                }
             }
             Wholesale match = wholesaleService.match(dataSku.getGoodsId(), numSum);
             if (match != null) {
