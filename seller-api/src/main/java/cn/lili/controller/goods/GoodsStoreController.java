@@ -114,12 +114,24 @@ public class GoodsStoreController {
     public ResultMessage<Object> batchUpdateAlertQuantity(@RequestBody List<GoodsSkuStockDTO> updateStockList) {
         String storeId = Objects.requireNonNull(UserContext.getCurrentUser()).getStoreId();
         // 获取商品skuId集合
-        List<String> goodsSkuIds = updateStockList.stream().map(GoodsSkuStockDTO::getSkuId).collect(Collectors.toList());
+        List<String> goodsSkuIds = new java.util.ArrayList<>();
+        for (GoodsSkuStockDTO dto : updateStockList) {
+            goodsSkuIds.add(dto.getSkuId());
+        }
         // 根据skuId集合查询商品信息
         List<GoodsSku> goodsSkuList = goodsSkuService.list(new LambdaQueryWrapper<GoodsSku>().in(GoodsSku::getId, goodsSkuIds).eq(GoodsSku::getStoreId, storeId));
         // 过滤不符合当前店铺的商品
-        List<String> filterGoodsSkuIds = goodsSkuList.stream().map(GoodsSku::getId).collect(Collectors.toList());
-        List<GoodsSkuStockDTO> collect = updateStockList.stream().filter(i -> filterGoodsSkuIds.contains(i.getSkuId())).collect(Collectors.toList());
+        java.util.Set<String> filterGoodsSkuIds = new java.util.HashSet<>();
+        for (GoodsSku sku : goodsSkuList) {
+            filterGoodsSkuIds.add(sku.getId());
+        }
+        List<GoodsSkuStockDTO> collect = new java.util.ArrayList<>();
+        for (GoodsSkuStockDTO dto : updateStockList) {
+            if (filterGoodsSkuIds.contains(dto.getSkuId())) {
+                collect.add(dto);
+            }
+        }
+        // ⚡ Bolt: Removed O(N²) List.contains in stream filter and replaced with O(1) HashSet lookup and traditional for loop
         goodsSkuService.batchUpdateAlertQuantity(collect);
         return ResultUtil.success();
     }
@@ -203,12 +215,24 @@ public class GoodsStoreController {
     public ResultMessage<Object> updateStocks(@RequestBody List<GoodsSkuStockDTO> updateStockList) {
         String storeId = Objects.requireNonNull(UserContext.getCurrentUser()).getStoreId();
         // 获取商品skuId集合
-        List<String> goodsSkuIds = updateStockList.stream().map(GoodsSkuStockDTO::getSkuId).collect(Collectors.toList());
+        List<String> goodsSkuIds = new java.util.ArrayList<>();
+        for (GoodsSkuStockDTO dto : updateStockList) {
+            goodsSkuIds.add(dto.getSkuId());
+        }
         // 根据skuId集合查询商品信息
         List<GoodsSku> goodsSkuList = goodsSkuService.list(new LambdaQueryWrapper<GoodsSku>().in(GoodsSku::getId, goodsSkuIds).eq(GoodsSku::getStoreId, storeId));
         // 过滤不符合当前店铺的商品
-        List<String> filterGoodsSkuIds = goodsSkuList.stream().map(GoodsSku::getId).collect(Collectors.toList());
-        List<GoodsSkuStockDTO> collect = updateStockList.stream().filter(i -> filterGoodsSkuIds.contains(i.getSkuId())).collect(Collectors.toList());
+        java.util.Set<String> filterGoodsSkuIds = new java.util.HashSet<>();
+        for (GoodsSku sku : goodsSkuList) {
+            filterGoodsSkuIds.add(sku.getId());
+        }
+        List<GoodsSkuStockDTO> collect = new java.util.ArrayList<>();
+        for (GoodsSkuStockDTO dto : updateStockList) {
+            if (filterGoodsSkuIds.contains(dto.getSkuId())) {
+                collect.add(dto);
+            }
+        }
+        // ⚡ Bolt: Removed O(N²) List.contains in stream filter and replaced with O(1) HashSet lookup and traditional for loop
         goodsSkuService.updateStocks(collect);
         return ResultUtil.success();
     }

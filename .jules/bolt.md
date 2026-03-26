@@ -1,0 +1,3 @@
+## 2024-03-26 - O(N²) List Contains Anti-Pattern
+**Learning:** Found an anti-pattern in stock updating logic where `List.contains()` is used inside a stream filter for filtering valid SKU IDs (e.g. `updateStockList.stream().filter(i -> filterGoodsSkuIds.contains(i.getSkuId()))`). This results in O(N²) complexity when processing large bulk updates. Additionally, using Streams for this creates unnecessary iteration and object allocation overhead.
+**Action:** Replace `List<String> filterGoodsSkuIds` with `Set<String>` using traditional `for` loops. This changes the complexity from O(N²) to O(N) and reduces iteration overhead and GC pressure.
