@@ -342,10 +342,14 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         queryWrapper.between(BasePromotions::getStartTime, DateUtil.beginOfDay(now), DateUtil.endOfDay(now));
         queryWrapper.ge(BasePromotions::getEndTime, DateUtil.endOfDay(now));
         List<Seckill> seckillList = this.seckillService.list(queryWrapper);
+
+        //读取系统时间的时刻
+        Calendar c = Calendar.getInstance();
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        SimpleDateFormat format = new SimpleDateFormat(DatePattern.NORM_DATE_PATTERN);
+        String date = format.format(new Date());
+
         for (Seckill seckill : seckillList) {
-            //读取系统时间的时刻
-            Calendar c = Calendar.getInstance();
-            int hour = c.get(Calendar.HOUR_OF_DAY);
             String[] split = seckill.getHours().split(",");
             int[] hoursSored = Arrays.stream(split).mapToInt(Integer::parseInt).toArray();
             Arrays.sort(hoursSored);
@@ -354,8 +358,6 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
                 boolean hoursSoredHour = (hoursSored[i] >= hour || ((i + 1) < hoursSored.length && hoursSored[i + 1] > hour));
                 boolean lastHour = i == hoursSored.length - 1 && hoursSored[i] < hour;
                 if (hoursSoredHour || lastHour) {
-                    SimpleDateFormat format = new SimpleDateFormat(DatePattern.NORM_DATE_PATTERN);
-                    String date = format.format(new Date());
                     //当前时间的秒数
                     long currentTime = DateUtil.currentSeconds();
                     //秒杀活动的时刻
