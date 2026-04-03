@@ -308,7 +308,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
      * @param seckillApplyList 秒杀活动申请列表
      */
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
-        List<String> existSku = new ArrayList<>();
+        java.util.Set<String> existSku = new java.util.HashSet<>();
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
