@@ -270,7 +270,8 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         LambdaQueryWrapper<SeckillApply> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
-        List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && seckill.getHours().contains(i.getTimeLine().toString())).collect(Collectors.toList());
+        java.util.Set<String> hoursSet = new java.util.HashSet<>(Arrays.asList(seckill.getHours().split(",")));
+        List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && hoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
             //获取参与活动的商品信息
@@ -308,15 +309,14 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
      * @param seckillApplyList 秒杀活动申请列表
      */
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
-        List<String> existSku = new ArrayList<>();
+        java.util.Set<String> existSku = new java.util.HashSet<>();
+        java.util.Set<String> rangeHoursSet = new java.util.HashSet<>(Arrays.asList(hours.split(",")));
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
             }
             //检查秒杀活动申请的时刻，是否存在在秒杀活动的时间段内
-            String[] rangeHours = hours.split(",");
-            boolean containsSame = Arrays.stream(rangeHours).anyMatch(i -> i.equals(seckillApply.getTimeLine().toString()));
-            if (!containsSame) {
+            if (!rangeHoursSet.contains(seckillApply.getTimeLine().toString())) {
                 throw new ServiceException(ResultCode.SECKILL_TIME_ERROR);
             }
             //检查商品是否参加多个时间段的活动
