@@ -370,15 +370,13 @@ public class CartServiceImpl implements CartService {
                 }
             }
 
-            List<String> storeIds = new ArrayList<>();
+            java.util.Set<String> storeIds = new java.util.HashSet<>();
             for (CartSkuVO cartSkuVO : tradeDTO.getSkuList()) {
-                if (!storeIds.contains(cartSkuVO.getStoreId())) {
-                    storeIds.add(cartSkuVO.getStoreId());
-                }
+                storeIds.add(cartSkuVO.getStoreId());
             }
 
             //获取可操作的优惠券集合
-            List<MemberCoupon> allScopeMemberCoupon = memberCouponService.getAllScopeMemberCoupon(tradeDTO.getMemberId(), storeIds);
+            List<MemberCoupon> allScopeMemberCoupon = memberCouponService.getAllScopeMemberCoupon(tradeDTO.getMemberId(), new ArrayList<>(storeIds));
             if (allScopeMemberCoupon != null && !allScopeMemberCoupon.isEmpty()) {
                 //过滤满足消费门槛
                 count += allScopeMemberCoupon.stream().filter(i -> i.getConsumeThreshold() <= totalPrice).count();
