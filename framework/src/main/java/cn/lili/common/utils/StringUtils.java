@@ -22,6 +22,17 @@ import java.util.regex.Pattern;
 public class StringUtils extends StrUtil {
 
     /**
+     * 特殊字符匹配正则表达式
+     */
+    private static final String SPECIAL_CHAR_REGEX = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+
+    /**
+     * 预编译的特殊字符匹配Pattern (性能优化)
+     * 避免在每次调用 filterSpecialChart 时重复编译正则表达式
+     */
+    private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile(SPECIAL_CHAR_REGEX);
+
+    /**
      * MD5加密方法
      *
      * @param str String
@@ -168,9 +179,7 @@ public class StringUtils extends StrUtil {
      * @return
      */
     public static String filterSpecialChart(String str) {
-        String regEx = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
-        Pattern p = Pattern.compile(regEx);
-        Matcher m = p.matcher(str);
+        Matcher m = SPECIAL_CHAR_PATTERN.matcher(str);
         return m.replaceAll("").trim();
     }
 
