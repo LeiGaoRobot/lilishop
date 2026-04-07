@@ -11,6 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,6 +21,8 @@ import java.util.regex.Pattern;
  * @author pikachu
  */
 public class StringUtils extends StrUtil {
+
+    private static final Pattern SPECIAL_CHARS_PATTERN = Pattern.compile("[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]");
 
     /**
      * MD5加密方法
@@ -36,7 +39,8 @@ public class StringUtils extends StrUtil {
             return null;
         }
         byte[] resultByte = messageDigest.digest(str.getBytes());
-        StringBuffer result = new StringBuffer();
+        // Optimize: Use StringBuilder instead of StringBuffer since thread-safety is not needed for a local variable
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < resultByte.length; ++i) {
             int v = 0xFF & resultByte[i];
             if (v < 16) {
@@ -54,13 +58,12 @@ public class StringUtils extends StrUtil {
      * @return
      */
     public static String getRandStr(int n) {
-        Random random = new Random();
-        String sRand = "";
+        // Optimize: Use ThreadLocalRandom instead of new Random() and StringBuilder for string concatenation
+        StringBuilder sRand = new StringBuilder(n);
         for (int i = 0; i < n; i++) {
-            String rand = String.valueOf(random.nextInt(10));
-            sRand += rand;
+            sRand.append(ThreadLocalRandom.current().nextInt(10));
         }
-        return sRand;
+        return sRand.toString();
     }
 
     /**
@@ -117,7 +120,8 @@ public class StringUtils extends StrUtil {
         if (str.length() == 1) {
             return str.toLowerCase();
         }
-        StringBuffer sb = new StringBuffer();
+        // Optimize: Use StringBuilder instead of StringBuffer since thread-safety is not needed for a local variable
+        StringBuilder sb = new StringBuilder();
         for (int i = 1; i < str.length(); i++) {
             if (Character.isUpperCase(str.charAt(i))) {
                 sb.append("_" + Character.toLowerCase(str.charAt(i)));
@@ -168,9 +172,8 @@ public class StringUtils extends StrUtil {
      * @return
      */
     public static String filterSpecialChart(String str) {
-        String regEx = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
-        Pattern p = Pattern.compile(regEx);
-        Matcher m = p.matcher(str);
+        // Optimize: Use pre-compiled static Pattern to avoid compilation overhead on every invocation
+        Matcher m = SPECIAL_CHARS_PATTERN.matcher(str);
         return m.replaceAll("").trim();
     }
 
