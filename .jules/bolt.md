@@ -1,3 +1,3 @@
-## 2023-10-27 - [O(N^2) Anti-Pattern in Batch Processing]
-**Learning:** Found O(N^2) complexity in batch processing logic where `List.contains()` is used inside a stream filter over a large collection.
-**Action:** Always convert collections to `Set` (e.g., `HashSet`) before using `.contains()` in loops or stream filters to achieve O(1) lookup time, especially for bulk operations.
+## 2026-04-09 - [Optimize existence checks and redundant operations]
+**Learning:** Invariant operations inside loops like redundant string splitting and stream creation, as well as `List.contains` cause O(N^2) complexity and GC pressure.
+**Action:** Use a `Set` for `existSku`, hoist `hours.split` outside the loop, and use `Set.add` for check-and-insert behavior.
