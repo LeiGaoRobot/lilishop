@@ -71,8 +71,9 @@ public class ManagerTokenGenerate extends AbstractTokenGenerate<AdminUser> {
     public Map<String, List<String>> permissionList(List<UserMenuVO> userMenuVOList) {
         Map<String, List<String>> permission = new HashMap<>(2);
 
-        List<String> superPermissions = new ArrayList<>();
-        List<String> queryPermissions = new ArrayList<>();
+        // ⚡ Bolt: Use LinkedHashSet for O(1) lookups/inserts while preserving order, preventing O(N^2) list iteration
+        java.util.Set<String> superPermissions = new java.util.LinkedHashSet<>();
+        java.util.Set<String> queryPermissions = new java.util.LinkedHashSet<>();
         initPermission(superPermissions, queryPermissions);
 
         //循环权限菜单
@@ -87,25 +88,22 @@ public class ManagerTokenGenerate extends AbstractTokenGenerate<AdminUser> {
                         //如果是超级权限 则计入超级权限
                         if (Boolean.TRUE.equals(menu.getSuper())) {
                             //如果已有超级权限，则这里就不做权限的累加
-                            if (!superPermissions.contains(url)) {
-                                superPermissions.add(url);
-                            }
+                            superPermissions.add(url);
                         }
                         //否则计入浏览权限
                         else {
                             //没有权限，则累加。
-                            if (!queryPermissions.contains(url)) {
-                                queryPermissions.add(url);
-                            }
+                            queryPermissions.add(url);
                         }
                     }
                 }
-                //去除重复的权限
-                queryPermissions.removeAll(superPermissions);
             });
+            // ⚡ Bolt: Hoist removeAll outside the loop so it only runs once
+            //去除重复的权限
+            queryPermissions.removeAll(superPermissions);
         }
-        permission.put(PermissionEnum.SUPER.name(), superPermissions);
-        permission.put(PermissionEnum.QUERY.name(), queryPermissions);
+        permission.put(PermissionEnum.SUPER.name(), new ArrayList<>(superPermissions));
+        permission.put(PermissionEnum.QUERY.name(), new ArrayList<>(queryPermissions));
         return permission;
     }
 
@@ -116,7 +114,7 @@ public class ManagerTokenGenerate extends AbstractTokenGenerate<AdminUser> {
      * @param superPermissions 超级权限
      * @param queryPermissions 查询权限
      */
-    void initPermission(List<String> superPermissions, List<String> queryPermissions) {
+    void initPermission(java.util.Set<String> superPermissions, java.util.Set<String> queryPermissions) {
         //TODO 用户信息维护--操作权限
         //获取当前登录用户
         superPermissions.add("/manager/passport/user/info*");
