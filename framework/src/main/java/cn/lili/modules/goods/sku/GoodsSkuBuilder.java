@@ -20,6 +20,9 @@ public class GoodsSkuBuilder {
 
     private static final String IMAGES_KEY = "images";
 
+    private static final Set<String> IGNORE_ORIGIN_KEYS = new HashSet<>(Arrays.asList(
+            "id", "sn", "cost", "price", "quantity", "weight", "alertQuantity"
+    ));
 
     /**
      * 构建商品sku
@@ -63,12 +66,10 @@ public class GoodsSkuBuilder {
         //规格值
         Map<String, Object> specMap = new LinkedHashMap<>();
 
-        // 原始规格项
-        String[] ignoreOriginKeys = {"id", "sn", "cost", "price", "quantity", "weight", "alertQuantity"};
         //获取规格信息
         for (Map.Entry<String, Object> spec : skuInfo.entrySet()) {
             //保存新增规格信息
-            if (!CollUtil.contains(Arrays.asList(ignoreOriginKeys), spec.getKey()) && spec.getValue() != null) {
+            if (!IGNORE_ORIGIN_KEYS.contains(spec.getKey()) && spec.getValue() != null) {
                 specMap.put(spec.getKey(), spec.getValue());
                 if (!spec.getKey().equals(IMAGES_KEY)) {
                     //设置商品名称
