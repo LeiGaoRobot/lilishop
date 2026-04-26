@@ -1,5 +1,4 @@
 package cn.lili.controller.goods;
-
 import cn.lili.common.aop.annotation.DemoSite;
 import cn.lili.common.context.ThreadContextHolder;
 import cn.lili.common.enums.ResultCode;
@@ -39,7 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -49,7 +47,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 /**
  * 店铺端,商品接口
  *
@@ -61,7 +58,6 @@ import java.util.stream.Collectors;
 @Api(tags = "店铺端,商品接口")
 @RequestMapping("/store/goods/goods")
 public class GoodsStoreController {
-
     /**
      * 商品
      */
@@ -72,8 +68,6 @@ public class GoodsStoreController {
      */
     @Autowired
     private GoodsSkuService goodsSkuService;
-
-
     @ApiOperation(value = "分页获取商品列表")
     @GetMapping(value = "/list")
     public ResultMessage<IPage<Goods>> getByPage(GoodsSearchParams goodsSearchParams) {
@@ -82,13 +76,11 @@ public class GoodsStoreController {
         goodsSearchParams.setStoreId(storeId);
         return ResultUtil.data(goodsService.queryByParams(goodsSearchParams));
     }
-
     @ApiOperation(value = "获取商品数量")
     @GetMapping(value = "/goodsNumber")
     public ResultMessage<GoodsNumVO> getGoodsNumVO(GoodsSearchParams goodsSearchParams) {
         return ResultUtil.data(goodsService.getGoodsNumVO(goodsSearchParams));
     }
-
     @ApiOperation(value = "分页获取商品Sku列表")
     @GetMapping(value = "/sku/list")
     public ResultMessage<IPage<GoodsSku>> getSkuByPage(GoodsSearchParams goodsSearchParams) {
@@ -97,7 +89,6 @@ public class GoodsStoreController {
         goodsSearchParams.setStoreId(storeId);
         return ResultUtil.data(goodsSkuService.getGoodsSkuByPage(goodsSearchParams));
     }
-
     @ApiOperation(value = "分页获取库存告警商品列表")
     @GetMapping(value = "/list/stock")
     public ResultMessage<IPage<GoodsSku>> getWarningStockByPage(GoodsSearchParams goodsSearchParams) {
@@ -109,7 +100,6 @@ public class GoodsStoreController {
         IPage<GoodsSku> goodsSkuPage = goodsSkuService.getGoodsSkuByPage(goodsSearchParams);
         return ResultUtil.data(goodsSkuPage);
     }
-
     @ApiOperation(value = "批量修改商品预警库存")
     @PutMapping(value = "/batch/update/alert/stocks", consumes = "application/json")
     public ResultMessage<Object> batchUpdateAlertQuantity(@RequestBody List<GoodsSkuStockDTO> updateStockList) {
@@ -124,46 +114,38 @@ public class GoodsStoreController {
         goodsSkuService.batchUpdateAlertQuantity(collect);
         return ResultUtil.success();
     }
-
     @ApiOperation(value = "修改商品预警库存")
     @PutMapping(value = "/update/alert/stocks", consumes = "application/json")
     public ResultMessage<Object> updateAlertQuantity(@RequestBody GoodsSkuStockDTO goodsSkuStockDTO) {
         goodsSkuService.updateAlertQuantity(goodsSkuStockDTO);
         return ResultUtil.success();
     }
-
-
     @ApiOperation(value = "通过id获取")
     @GetMapping(value = "/get/{id}")
     public ResultMessage<GoodsVO> get(@PathVariable String id) {
         GoodsVO goods = OperationalJudgment.judgment(goodsService.getGoodsVO(id));
         return ResultUtil.data(goods);
     }
-
     @ApiOperation(value = "新增商品")
     @PostMapping(value = "/create", consumes = "application/json", produces = "application/json")
     public ResultMessage<GoodsOperationDTO> save(@Valid @RequestBody GoodsOperationDTO goodsOperationDTO) {
         goodsService.addGoods(goodsOperationDTO);
         return ResultUtil.success();
     }
-
     @ApiOperation(value = "修改商品")
     @PutMapping(value = "/update/{goodsId}", consumes = "application/json", produces = "application/json")
     public ResultMessage<GoodsOperationDTO> update(@Valid @RequestBody GoodsOperationDTO goodsOperationDTO, @PathVariable String goodsId) {
         goodsService.editGoods(goodsOperationDTO, goodsId);
         return ResultUtil.success();
     }
-
     @DemoSite
     @ApiOperation(value = "下架商品", notes = "下架商品时使用")
     @ApiImplicitParam(name = "goodsId", value = "商品ID", required = true, paramType = "query", allowMultiple = true)
     @PutMapping(value = "/under")
     public ResultMessage<Object> underGoods(@RequestParam List<String> goodsId) {
-
         goodsService.updateGoodsMarketAble(goodsId, GoodsStatusEnum.DOWN, "商家下架");
         return ResultUtil.success();
     }
-
     @ApiOperation(value = "上架商品", notes = "上架商品时使用")
     @PutMapping(value = "/up")
     @ApiImplicitParam(name = "goodsId", value = "商品ID", required = true, paramType = "query", allowMultiple = true)
@@ -171,7 +153,6 @@ public class GoodsStoreController {
         goodsService.updateGoodsMarketAble(goodsId, GoodsStatusEnum.UPPER, "");
         return ResultUtil.success();
     }
-
     @DemoSite
     @ApiOperation(value = "删除商品")
     @PutMapping(value = "/delete")
@@ -180,7 +161,6 @@ public class GoodsStoreController {
         goodsService.deleteGoods(goodsId);
         return ResultUtil.success();
     }
-
     @ApiOperation(value = "设置商品运费模板")
     @PutMapping(value = "/freight")
     @ApiImplicitParams({
@@ -191,14 +171,12 @@ public class GoodsStoreController {
         goodsService.freight(goodsId, templateId);
         return ResultUtil.success();
     }
-
     @ApiOperation(value = "根据goodsId分页获取商品规格列表")
     @GetMapping(value = "/sku/{goodsId}/list")
     public ResultMessage<List<GoodsSkuVO>> getSkuByList(@PathVariable String goodsId) {
         String storeId = Objects.requireNonNull(UserContext.getCurrentUser()).getStoreId();
         return ResultUtil.data(goodsSkuService.getGoodsSkuVOList(goodsSkuService.list(new LambdaQueryWrapper<GoodsSku>().eq(GoodsSku::getGoodsId, goodsId).eq(GoodsSku::getStoreId, storeId))));
     }
-
     @ApiOperation(value = "修改商品库存")
     @PutMapping(value = "/update/stocks", consumes = "application/json")
     public ResultMessage<Object> updateStocks(@RequestBody List<GoodsSkuStockDTO> updateStockList) {
@@ -233,21 +211,16 @@ public class GoodsStoreController {
             log.error(ResultCode.GOODS_ERROR.message(), e);
             return ResultUtil.error(ResultCode.GOODS_ERROR);
         }
-
     }
-
-
     @ApiOperation(value = "分页获取商品Sku列表")
     @GetMapping(value = "/queryExportStock")
     public void queryExportStock(GoodsSearchParams goodsSearchParams) {
         //获取当前登录商家账号
         String storeId = Objects.requireNonNull(UserContext.getCurrentUser()).getStoreId();
         goodsSearchParams.setStoreId(storeId);
-
         HttpServletResponse response = ThreadContextHolder.getHttpResponse();
         goodsSkuService.queryExportStock(response,goodsSearchParams);
     }
-
     @ApiOperation(value = "上传商品库存列表")
     @PostMapping(value = "/importStockExcel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResultMessage<Object> importStockExcel(@RequestPart("files") MultipartFile files) {
@@ -256,7 +229,4 @@ public class GoodsStoreController {
         goodsSkuService.importStock(storeId,files);
         return ResultUtil.success(ResultCode.SUCCESS);
     }
-
-
-
 }
