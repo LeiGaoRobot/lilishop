@@ -98,8 +98,9 @@ public class StoreAuthenticationFilter extends BasicAuthenticationFilter {
 
         try {
             Claims claims
-                    = Jwts.parser()
+                    = Jwts.parserBuilder()
                     .setSigningKey(SecretKeyUtil.generalKeyByDecoders())
+                    .build()
                     .parseClaimsJws(jwt).getBody();
             //获取存储在claims中的用户信息
             String json = claims.get(SecurityEnum.USER_CONTEXT.getValue()).toString();
