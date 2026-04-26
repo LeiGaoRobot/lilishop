@@ -267,17 +267,8 @@ public class CheckDataRender implements CartRenderStep {
         if (CollUtil.isNotEmpty(goodsGroup)) {
             goodsGroup.forEach((k, v) -> {
                 // 获取购买总数
-                int sum = 0;
-                int fSum = 0;
-                // ⚡ Bolt: Use a single for-loop instead of multiple stream passes to reduce iteration overhead and GC pressure during cart check render.
-                for (CartSkuVO i : v) {
-                    if (Boolean.TRUE.equals(i.getChecked())) {
-                        sum += i.getNum();
-                    } else if (Boolean.FALSE.equals(i.getChecked())) {
-                        fSum += i.getNum();
-                    }
-                }
-                final int finalFSum = fSum;
+                int sum = v.stream().filter(i -> Boolean.TRUE.equals(i.getChecked())).mapToInt(CartSkuVO::getNum).sum();
+                int fSum = v.stream().filter(i -> Boolean.FALSE.equals(i.getChecked())).mapToInt(CartSkuVO::getNum).sum();
                 // 匹配符合的批发规则
                 Wholesale match = wholesaleService.match(k, sum);
                 if (match != null) {
@@ -290,7 +281,7 @@ public class CheckDataRender implements CartRenderStep {
                             i.setUtilPrice(match.getPrice());
                             i.setSubTotal(CurrencyUtil.mul(i.getPurchasePrice(), i.getNum()));
                         } else {
-                            i.setPurchasePrice(wholesaleService.match(k, finalFSum).getPrice());
+                            i.setPurchasePrice(wholesaleService.match(k, fSum).getPrice());
                             i.getGoodsSku().setPrice(i.getPurchasePrice());
                             i.getGoodsSku().setCost(i.getPurchasePrice());
                             i.setUtilPrice(i.getPurchasePrice());
