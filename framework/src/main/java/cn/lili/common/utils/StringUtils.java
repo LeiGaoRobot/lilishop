@@ -117,15 +117,18 @@ public class StringUtils extends StrUtil {
         if (str.length() == 1) {
             return str.toLowerCase();
         }
-        StringBuffer sb = new StringBuffer();
+        // ⚡ Bolt: Replace synchronized StringBuffer with StringBuilder, size it properly, and eliminate redundant string allocations during append operations
+        StringBuilder sb = new StringBuilder(str.length() + 8);
+        sb.append(Character.toLowerCase(str.charAt(0)));
         for (int i = 1; i < str.length(); i++) {
-            if (Character.isUpperCase(str.charAt(i))) {
-                sb.append("_" + Character.toLowerCase(str.charAt(i)));
+            char c = str.charAt(i);
+            if (Character.isUpperCase(c)) {
+                sb.append('_').append(Character.toLowerCase(c));
             } else {
-                sb.append(str.charAt(i));
+                sb.append(Character.toLowerCase(c));
             }
         }
-        return (str.charAt(0) + sb.toString()).toLowerCase();
+        return sb.toString();
     }
 
     /**
