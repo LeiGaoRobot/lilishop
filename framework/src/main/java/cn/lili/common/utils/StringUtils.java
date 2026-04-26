@@ -22,6 +22,13 @@ import java.util.regex.Pattern;
 public class StringUtils extends StrUtil {
 
     /**
+     * Cache the compiled pattern to improve performance by avoiding redundant compilation.
+     * ⚡ Bolt: regex compilation optimization.
+     */
+    private static final String SPECIAL_CHAR_REGEX = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+    private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile(SPECIAL_CHAR_REGEX);
+
+    /**
      * MD5加密方法
      *
      * @param str String
@@ -54,13 +61,13 @@ public class StringUtils extends StrUtil {
      * @return
      */
     public static String getRandStr(int n) {
-        Random random = new Random();
-        String sRand = "";
+        // Bolt: Optimized to use ThreadLocalRandom and StringBuilder to avoid object creation overhead
+        StringBuilder sRand = new StringBuilder(n);
+        java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
         for (int i = 0; i < n; i++) {
-            String rand = String.valueOf(random.nextInt(10));
-            sRand += rand;
+            sRand.append(random.nextInt(10));
         }
-        return sRand;
+        return sRand.toString();
     }
 
     /**
@@ -117,15 +124,18 @@ public class StringUtils extends StrUtil {
         if (str.length() == 1) {
             return str.toLowerCase();
         }
-        StringBuffer sb = new StringBuffer();
+        // ⚡ Bolt: Replace synchronized StringBuffer with StringBuilder, size it properly, and eliminate redundant string allocations during append operations
+        StringBuilder sb = new StringBuilder(str.length() + 8);
+        sb.append(Character.toLowerCase(str.charAt(0)));
         for (int i = 1; i < str.length(); i++) {
-            if (Character.isUpperCase(str.charAt(i))) {
-                sb.append("_" + Character.toLowerCase(str.charAt(i)));
+            char c = str.charAt(i);
+            if (Character.isUpperCase(c)) {
+                sb.append('_').append(Character.toLowerCase(c));
             } else {
-                sb.append(str.charAt(i));
+                sb.append(Character.toLowerCase(c));
             }
         }
-        return (str.charAt(0) + sb.toString()).toLowerCase();
+        return sb.toString();
     }
 
     /**
@@ -168,9 +178,8 @@ public class StringUtils extends StrUtil {
      * @return
      */
     public static String filterSpecialChart(String str) {
-        String regEx = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
-        Pattern p = Pattern.compile(regEx);
-        Matcher m = p.matcher(str);
+        // ⚡ Bolt: Use pre-compiled SPECIAL_CHAR_PATTERN to avoid O(n) regex compilation cost per call
+        Matcher m = SPECIAL_CHAR_PATTERN.matcher(str);
         return m.replaceAll("").trim();
     }
 
