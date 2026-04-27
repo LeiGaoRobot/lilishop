@@ -366,7 +366,7 @@ public class CouponActivityServiceImpl extends AbstractPromotionsServiceImpl<Cou
                     couponService.receiveCoupon(couponActivityItem.getCouponId(), memberCouponList.size());
                 }
             } else {
-                log.error("赠送优惠券失败,当前优惠券不存在:" + couponActivityItem.getCouponId());
+                log.error("赠送优惠券失败,当前优惠券不存在:{}", couponActivityItem.getCouponId());
             }
         }
     }
