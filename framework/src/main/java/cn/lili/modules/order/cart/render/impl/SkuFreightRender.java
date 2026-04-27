@@ -53,13 +53,13 @@ public class SkuFreightRender implements CartRenderStep {
         if (DeliveryMethodEnum.LOGISTICS.name().equals(tradeDTO.getCartList().get(0).getDeliveryMethod())) {
             if (memberAddress != null) {
                 //运费分组信息
-                Map<String, java.util.Set<String>> freightGroups = freightTemplateGrouping(cartSkuVOS);
+                Map<String, List<String>> freightGroups = freightTemplateGrouping(cartSkuVOS);
 
                 //循环运费模版
-                for (Map.Entry<String, java.util.Set<String>> freightTemplateGroup : freightGroups.entrySet()) {
+                for (Map.Entry<String, List<String>> freightTemplateGroup : freightGroups.entrySet()) {
 
                     //商品id列表
-                    java.util.Set<String> skuIds = freightTemplateGroup.getValue();
+                    List<String> skuIds = freightTemplateGroup.getValue();
 
                     //当前购物车商品列表
                     List<CartSkuVO> currentCartSkus = cartSkuVOS.stream().filter(item -> skuIds.contains(item.getGoodsSku().getId())).collect(Collectors.toList());
@@ -163,10 +163,10 @@ public class SkuFreightRender implements CartRenderStep {
      * 运费模版分组
      *
      * @param cartSkuVOS 购物车商品
-     * @return map<运费模版id ， Set < skuid>>
+     * @return map<运费模版id ， List < skuid>>
      */
-    private Map<String, java.util.Set<String>> freightTemplateGrouping(List<CartSkuVO> cartSkuVOS) {
-        Map<String, java.util.Set<String>> map = new HashMap<>();
+    private Map<String, List<String>> freightTemplateGrouping(List<CartSkuVO> cartSkuVOS) {
+        Map<String, List<String>> map = new HashMap<>();
         //循环渲染购物车商品运费价格
         for (CartSkuVO cartSkuVO : cartSkuVOS) {
             ////免运费判定
@@ -174,11 +174,11 @@ public class SkuFreightRender implements CartRenderStep {
             if (Boolean.TRUE.equals(cartSkuVO.getIsFreeFreight()) || freightTemplateId == null) {
                 continue;
             }
-            //包含 则value值中写入sku标识，否则直接写入新的对象，key为模版id，value为new hashset
+            //包含 则value值中写入sku标识，否则直接写入新的对象，key为模版id，value为new arraylist
             if (map.containsKey(freightTemplateId)) {
                 map.get(freightTemplateId).add(cartSkuVO.getGoodsSku().getId());
             } else {
-                java.util.Set<String> skuIdsList = new java.util.HashSet<>();
+                List<String> skuIdsList = new ArrayList<>();
                 skuIdsList.add(cartSkuVO.getGoodsSku().getId());
                 map.put(freightTemplateId, skuIdsList);
             }
