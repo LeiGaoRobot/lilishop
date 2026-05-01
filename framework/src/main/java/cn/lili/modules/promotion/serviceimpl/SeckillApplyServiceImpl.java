@@ -308,22 +308,22 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
      * @param seckillApplyList 秒杀活动申请列表
      */
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
-        List<String> existSku = new ArrayList<>();
+        // Bolt: Optimized existSku deduplication by using a HashSet to reduce O(N^2) complexity to O(N)
+        Set<String> existSku = new HashSet<>();
+        // Bolt: Hoisted invariant hours.split(",") out of the loop to prevent repeated string parsing and object allocations
+        String[] rangeHours = hours.split(",");
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
             }
             //检查秒杀活动申请的时刻，是否存在在秒杀活动的时间段内
-            String[] rangeHours = hours.split(",");
             boolean containsSame = Arrays.stream(rangeHours).anyMatch(i -> i.equals(seckillApply.getTimeLine().toString()));
             if (!containsSame) {
                 throw new ServiceException(ResultCode.SECKILL_TIME_ERROR);
             }
             //检查商品是否参加多个时间段的活动
-            if (existSku.contains(seckillApply.getSkuId())) {
+            if (!existSku.add(seckillApply.getSkuId())) {
                 throw new ServiceException(seckillApply.getGoodsName() + "该商品不能同时参加多个时间段的活动");
-            } else {
-                existSku.add(seckillApply.getSkuId());
             }
 
         }

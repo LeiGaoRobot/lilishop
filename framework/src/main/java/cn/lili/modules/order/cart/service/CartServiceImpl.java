@@ -370,12 +370,12 @@ public class CartServiceImpl implements CartService {
                 }
             }
 
-            List<String> storeIds = new ArrayList<>();
+            // Bolt: Optimized deduplication by using a HashSet to avoid O(N^2) list.contains() checks
+            Set<String> storeIdSet = new HashSet<>();
             for (CartSkuVO cartSkuVO : tradeDTO.getSkuList()) {
-                if (!storeIds.contains(cartSkuVO.getStoreId())) {
-                    storeIds.add(cartSkuVO.getStoreId());
-                }
+                storeIdSet.add(cartSkuVO.getStoreId());
             }
+            List<String> storeIds = new ArrayList<>(storeIdSet);
 
             //获取可操作的优惠券集合
             List<MemberCoupon> allScopeMemberCoupon = memberCouponService.getAllScopeMemberCoupon(tradeDTO.getMemberId(), storeIds);
