@@ -695,10 +695,14 @@ public class GoodsSkuServiceImpl extends ServiceImpl<GoodsSkuMapper, GoodsSku> i
             cache.remove(CachePrefix.GOODS.getPrefix() + goodsId);
         }
         //修改预警库存
+        List<GoodsSku> currentGoodsSkus = this.listByIds(skuIds);
+        Map<String, GoodsSku> skuMap = currentGoodsSkus.stream().collect(Collectors.toMap(GoodsSku::getId, i -> i));
         for (GoodsSkuStockDTO goodsSkuStockDTO : goodsSkuStockDTOS) {
-            GoodsSku goodsSku = this.getById(goodsSkuStockDTO.getSkuId());
-            goodsSku.setAlertQuantity(goodsSkuStockDTO.getAlertQuantity());
-            goodsSkuList.add(goodsSku);
+            GoodsSku goodsSku = skuMap.get(goodsSkuStockDTO.getSkuId());
+            if (goodsSku != null) {
+                goodsSku.setAlertQuantity(goodsSkuStockDTO.getAlertQuantity());
+                goodsSkuList.add(goodsSku);
+            }
         }
         this.updateBatchById(goodsSkuList);
     }
