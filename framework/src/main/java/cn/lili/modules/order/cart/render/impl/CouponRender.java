@@ -19,7 +19,14 @@ import cn.lili.modules.promotion.service.MemberCouponService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -155,7 +162,8 @@ public class CouponRender implements CartRenderStep {
                 return filterSku;
             case PORTION_GOODS:
                 //按照商品过滤
-                filterSku = filterSku.stream().filter(cartSkuVO -> memberCoupon.getScopeId().contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
+                Set<String> goodsScopeSet = new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
+                filterSku = filterSku.stream().filter(cartSkuVO -> goodsScopeSet.contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
                 break;
 
             case PORTION_SHOP_CATEGORY:
@@ -166,12 +174,13 @@ public class CouponRender implements CartRenderStep {
             case PORTION_GOODS_CATEGORY:
 
                 //按照店铺分类过滤
+                Set<String> categoryScopeSet = new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
                 filterSku = filterSku.stream().filter(cartSkuVO -> {
                     //平台分类获取
                     String[] categoryPath = cartSkuVO.getGoodsSku().getCategoryPath().split(",");
                     //平台三级分类
                     String categoryId = categoryPath[categoryPath.length - 1];
-                    return memberCoupon.getScopeId().contains(categoryId);
+                    return categoryScopeSet.contains(categoryId);
                 }).collect(Collectors.toList());
                 break;
             default:
@@ -188,13 +197,14 @@ public class CouponRender implements CartRenderStep {
      * @return 优惠券按照店铺分类过滤的购物车商品信息
      */
     private List<CartSkuVO> filterPromotionShopCategory(List<CartSkuVO> filterSku, MemberCoupon memberCoupon) {
+        Set<String> scopeSet = new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
         return filterSku.stream().filter(cartSkuVO -> {
             if (CharSequenceUtil.isNotEmpty(cartSkuVO.getGoodsSku().getStoreCategoryPath())) {
                 //获取店铺分类
                 String[] storeCategoryPath = cartSkuVO.getGoodsSku().getStoreCategoryPath().split(",");
                 for (String category : storeCategoryPath) {
                     //店铺分类只要有一项吻合，即可返回true
-                    if (memberCoupon.getScopeId().contains(category)) {
+                    if (scopeSet.contains(category)) {
                         return true;
                     }
                 }
