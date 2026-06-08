@@ -1,3 +1,3 @@
-## 2023-10-27 - [O(N^2) Anti-Pattern in Batch Processing]
-**Learning:** Found O(N^2) complexity in batch processing logic where `List.contains()` is used inside a stream filter over a large collection.
-**Action:** Always convert collections to `Set` (e.g., `HashSet`) before using `.contains()` in loops or stream filters to achieve O(1) lookup time, especially for bulk operations.
+## 2024-06-08 - Use Set.add for safe, single-operation existence checks in Java
+**Learning:** Instead of using `List.contains(item)` inside loops and manually adding items, `Set.add(item)` is more efficient and safe, providing an O(1) existence check and insertion in a single operation. This avoids unnecessary O(N) linear lookups on each iteration.
+**Action:** Replace `if (!list.contains(item)) { list.add(item); }` patterns inside loops with `Set<T> set = new HashSet<>();` and use `if (!set.add(item)) { ... }` or `set.add(item)`. Also hoist repetitive String.split(",") or conversion logic out of loop structures to improve performance.
