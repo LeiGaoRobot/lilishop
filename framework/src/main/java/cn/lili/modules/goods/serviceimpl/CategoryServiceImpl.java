@@ -32,6 +32,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 
@@ -136,9 +138,9 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
 
     @Override
     public List<CategoryVO> getStoreCategory(String[] categories) {
-        List<String> arr = Arrays.asList(categories.clone());
+        Set<String> categorySet = new HashSet<>(Arrays.asList(categories));
         return categoryTree().stream()
-                .filter(item -> arr.contains(item.getId())).collect(Collectors.toList());
+                .filter(item -> categorySet.contains(item.getId())).collect(Collectors.toList());
     }
 
     @Override

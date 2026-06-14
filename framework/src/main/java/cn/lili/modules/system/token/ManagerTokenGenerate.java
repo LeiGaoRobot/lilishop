@@ -18,6 +18,8 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -71,8 +73,8 @@ public class ManagerTokenGenerate extends AbstractTokenGenerate<AdminUser> {
     public Map<String, List<String>> permissionList(List<UserMenuVO> userMenuVOList) {
         Map<String, List<String>> permission = new HashMap<>(2);
 
-        List<String> superPermissions = new ArrayList<>();
-        List<String> queryPermissions = new ArrayList<>();
+        Set<String> superPermissions = new HashSet<>();
+        Set<String> queryPermissions = new HashSet<>();
         initPermission(superPermissions, queryPermissions);
 
         //循环权限菜单
@@ -104,8 +106,8 @@ public class ManagerTokenGenerate extends AbstractTokenGenerate<AdminUser> {
                 queryPermissions.removeAll(superPermissions);
             });
         }
-        permission.put(PermissionEnum.SUPER.name(), superPermissions);
-        permission.put(PermissionEnum.QUERY.name(), queryPermissions);
+        permission.put(PermissionEnum.SUPER.name(), new ArrayList<>(superPermissions));
+        permission.put(PermissionEnum.QUERY.name(), new ArrayList<>(queryPermissions));
         return permission;
     }
 
@@ -116,7 +118,7 @@ public class ManagerTokenGenerate extends AbstractTokenGenerate<AdminUser> {
      * @param superPermissions 超级权限
      * @param queryPermissions 查询权限
      */
-    void initPermission(List<String> superPermissions, List<String> queryPermissions) {
+    void initPermission(Set<String> superPermissions, Set<String> queryPermissions) {
         //TODO 用户信息维护--操作权限
         //获取当前登录用户
         superPermissions.add("/manager/passport/user/info*");
