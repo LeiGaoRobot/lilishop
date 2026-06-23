@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.LinkedHashSet;
 
 /**
  * 商家token生成
@@ -99,8 +101,9 @@ public class StoreTokenGenerate extends AbstractTokenGenerate<Member> {
     public Map<String, List<String>> permissionList(List<StoreUserMenuVO> userMenuVOList) {
         Map<String, List<String>> permission = new HashMap<>(2);
 
-        List<String> superPermissions = new ArrayList<>();
-        List<String> queryPermissions = new ArrayList<>();
+        // Bolt: Optimize List.contains to Set for O(1) deduplication and retain insertion order
+        Set<String> superPermissions = new LinkedHashSet<>();
+        Set<String> queryPermissions = new LinkedHashSet<>();
         initPermission(superPermissions, queryPermissions);
 
         //循环权限菜单
@@ -114,17 +117,11 @@ public class StoreTokenGenerate extends AbstractTokenGenerate<Member> {
                     for (String url : permissionUrl) {
                         //如果是超级权限 则计入超级权限
                         if (Boolean.TRUE.equals(menu.getSuper())) {
-                            //如果已有超级权限，则这里就不做权限的累加
-                            if (!superPermissions.contains(url)) {
-                                superPermissions.add(url);
-                            }
+                            superPermissions.add(url);
                         }
                         //否则计入浏览权限
                         else {
-                            //没有权限，则累加。
-                            if (!queryPermissions.contains(url)) {
-                                queryPermissions.add(url);
-                            }
+                            queryPermissions.add(url);
                         }
                     }
                 }
@@ -132,8 +129,8 @@ public class StoreTokenGenerate extends AbstractTokenGenerate<Member> {
                 queryPermissions.removeAll(superPermissions);
             });
         }
-        permission.put(PermissionEnum.SUPER.name(), superPermissions);
-        permission.put(PermissionEnum.QUERY.name(), queryPermissions);
+        permission.put(PermissionEnum.SUPER.name(), new ArrayList<>(superPermissions));
+        permission.put(PermissionEnum.QUERY.name(), new ArrayList<>(queryPermissions));
         return permission;
     }
 
@@ -145,7 +142,7 @@ public class StoreTokenGenerate extends AbstractTokenGenerate<Member> {
      * @param superPermissions 超级权限
      * @param queryPermissions 查询权限
      */
-    void initPermission(List<String> superPermissions, List<String> queryPermissions) {
+    void initPermission(Set<String> superPermissions, Set<String> queryPermissions) {
         //菜单管理
         superPermissions.add("/store/menu*");
         //退出权限
