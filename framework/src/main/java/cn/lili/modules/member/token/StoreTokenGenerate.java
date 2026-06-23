@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.LinkedHashSet;
 
 /**
  * 商家token生成
@@ -100,8 +102,8 @@ public class StoreTokenGenerate extends AbstractTokenGenerate<Member> {
         Map<String, List<String>> permission = new HashMap<>(2);
 
         // Bolt: Optimize List.contains to Set for O(1) deduplication and retain insertion order
-        java.util.Set<String> superPermissions = new java.util.LinkedHashSet<>();
-        java.util.Set<String> queryPermissions = new java.util.LinkedHashSet<>();
+        Set<String> superPermissions = new LinkedHashSet<>();
+        Set<String> queryPermissions = new LinkedHashSet<>();
         initPermission(superPermissions, queryPermissions);
 
         //循环权限菜单
@@ -140,7 +142,7 @@ public class StoreTokenGenerate extends AbstractTokenGenerate<Member> {
      * @param superPermissions 超级权限
      * @param queryPermissions 查询权限
      */
-    void initPermission(java.util.Set<String> superPermissions, java.util.Set<String> queryPermissions) {
+    void initPermission(Set<String> superPermissions, Set<String> queryPermissions) {
         //菜单管理
         superPermissions.add("/store/menu*");
         //退出权限
