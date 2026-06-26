@@ -155,7 +155,7 @@ public class CouponRender implements CartRenderStep {
                 return filterSku;
             case PORTION_GOODS:
                 //按照商品过滤
-                java.util.Set<String> goodsScopeSet = new java.util.HashSet<>(java.util.Arrays.asList(memberCoupon.getScopeId().split(",")));
+                Set<String> goodsScopeSet = new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
                 filterSku = filterSku.stream().filter(cartSkuVO -> goodsScopeSet.contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
                 break;
 
@@ -165,7 +165,7 @@ public class CouponRender implements CartRenderStep {
                 break;
 
             case PORTION_GOODS_CATEGORY:
-                java.util.Set<String> goodsCategoryScopeSet = new java.util.HashSet<>(java.util.Arrays.asList(memberCoupon.getScopeId().split(",")));
+                Set<String> goodsCategoryScopeSet = new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
 
                 //按照店铺分类过滤
                 filterSku = filterSku.stream().filter(cartSkuVO -> {
@@ -190,7 +190,7 @@ public class CouponRender implements CartRenderStep {
      * @return 优惠券按照店铺分类过滤的购物车商品信息
      */
     private List<CartSkuVO> filterPromotionShopCategory(List<CartSkuVO> filterSku, MemberCoupon memberCoupon) {
-        java.util.Set<String> shopCategoryScopeSet = new java.util.HashSet<>(java.util.Arrays.asList(memberCoupon.getScopeId().split(",")));
+        Set<String> shopCategoryScopeSet = new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
         return filterSku.stream().filter(cartSkuVO -> {
             if (CharSequenceUtil.isNotEmpty(cartSkuVO.getGoodsSku().getStoreCategoryPath())) {
                 //获取店铺分类
