@@ -270,7 +270,9 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         LambdaQueryWrapper<SeckillApply> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
-        List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && seckill.getHours().contains(i.getTimeLine().toString())).collect(Collectors.toList());
+        // ⚡ Bolt: Optimize delimited string contains to Set lookup to achieve O(1) performance and prevent substring matching bugs
+        java.util.Set<String> hoursSet = seckill.getHours() != null ? new java.util.HashSet<>(java.util.Arrays.asList(seckill.getHours().split(","))) : java.util.Collections.emptySet();
+        List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && hoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
             //获取参与活动的商品信息
