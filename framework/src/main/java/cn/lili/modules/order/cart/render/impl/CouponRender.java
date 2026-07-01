@@ -21,6 +21,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
 
 /**
  * 购物促销信息渲染实现
@@ -154,8 +157,9 @@ public class CouponRender implements CartRenderStep {
             case ALL:
                 return filterSku;
             case PORTION_GOODS:
-                //按照商品过滤
-                filterSku = filterSku.stream().filter(cartSkuVO -> memberCoupon.getScopeId().contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
+                //按照商品过滤 (Bolt: Optimize by using Set instead of delimited string contains for O(1) lookup)
+                Set<String> scopeIdSet = new java.util.HashSet<>(java.util.Arrays.asList(memberCoupon.getScopeId().split(",")));
+                filterSku = filterSku.stream().filter(cartSkuVO -> scopeIdSet.contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
                 break;
 
             case PORTION_SHOP_CATEGORY:
