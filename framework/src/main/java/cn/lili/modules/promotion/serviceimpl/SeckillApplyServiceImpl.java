@@ -40,6 +40,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * 秒杀申请业务层实现
@@ -269,8 +272,9 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         List<PromotionGoods> promotionGoodsList = new ArrayList<>();
         LambdaQueryWrapper<SeckillApply> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
-
-        List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && seckill.getHours().contains(i.getTimeLine().toString())).collect(Collectors.toList());
+        // Parse hours to a Set for O(1) lookup inside the filter safely
+        Set<String> hoursSet = seckill.getHours() != null ? Arrays.stream(seckill.getHours().split(",")).collect(Collectors.toSet()) : Collections.emptySet();
+        List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && hoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
             //获取参与活动的商品信息
