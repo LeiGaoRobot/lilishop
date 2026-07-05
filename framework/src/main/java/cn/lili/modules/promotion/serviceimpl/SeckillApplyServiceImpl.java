@@ -40,6 +40,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
 
 /**
  * 秒杀申请业务层实现
@@ -270,7 +273,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         LambdaQueryWrapper<SeckillApply> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
-        java.util.Set<String> seckillHours = new java.util.HashSet<>(java.util.Arrays.asList(seckill.getHours().split(",")));
+        Set<String> seckillHours = new HashSet<>(Arrays.asList(seckill.getHours().split(",")));
         List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && seckillHours.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
