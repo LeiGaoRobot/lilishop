@@ -273,7 +273,8 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
         // BOLT: Convert comma-separated string to Set outside the loop to prevent O(N) redundant splits and substring matching bugs
-        Set<String> hoursSet = new HashSet<>(Arrays.asList(seckill.getHours().split(",")));
+        // BOLT: Added null protection for seckill.getHours()
+        Set<String> hoursSet = seckill.getHours() != null ? new HashSet<>(Arrays.asList(seckill.getHours().split(","))) : Collections.emptySet();
         List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && hoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
@@ -315,7 +316,8 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         // BOLT: Replace List with Set to achieve O(1) lookup time for existSku
         Set<String> existSku = new HashSet<>();
         // BOLT: Hoist hours split outside the loop and use Set for O(1) lookups instead of streams
-        Set<String> rangeHoursSet = new HashSet<>(Arrays.asList(hours.split(",")));
+        // BOLT: Added null protection for hours
+        Set<String> rangeHoursSet = hours != null ? new HashSet<>(Arrays.asList(hours.split(","))) : Collections.emptySet();
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
