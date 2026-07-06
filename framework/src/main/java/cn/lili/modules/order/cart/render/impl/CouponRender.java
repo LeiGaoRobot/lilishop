@@ -156,8 +156,12 @@ public class CouponRender implements CartRenderStep {
                 return filterSku;
             case PORTION_GOODS:
                 //按照商品过滤 (Bolt: Optimize by using Set instead of delimited string contains for O(1) lookup)
-                Set<String> scopeIdSet = new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
-                filterSku = filterSku.stream().filter(cartSkuVO -> scopeIdSet.contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
+                if (memberCoupon.getScopeId() != null) {
+                    Set<String> scopeIdSet = new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
+                    filterSku = filterSku.stream().filter(cartSkuVO -> scopeIdSet.contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
+                } else {
+                    filterSku = new ArrayList<>();
+                }
                 break;
 
             case PORTION_SHOP_CATEGORY:
