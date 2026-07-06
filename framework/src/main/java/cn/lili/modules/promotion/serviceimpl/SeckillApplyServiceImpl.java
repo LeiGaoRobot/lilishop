@@ -271,8 +271,8 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
         // Optimize: Convert delimited string 'hours' to a Set for O(1) lookup inside the stream filter
-        java.util.Set<String> hoursSet = java.util.Arrays.stream(seckill.getHours().split(","))
-                .collect(Collectors.toSet());
+        java.util.Set<String> hoursSet = seckill.getHours() == null ? java.util.Collections.emptySet() :
+            java.util.Arrays.stream(seckill.getHours().split(",")).collect(Collectors.toSet());
 
         List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && hoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
