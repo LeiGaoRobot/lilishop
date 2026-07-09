@@ -271,7 +271,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
         // BOLT: Optimize String.contains() with O(1) Set lookup and prevent substring matching bugs on delimited hours
-        Set<String> seckillHoursSet = new HashSet<>(Arrays.asList(seckill.getHours().split(",")));
+        Set<String> seckillHoursSet = seckill.getHours() != null ? new HashSet<>(Arrays.asList(seckill.getHours().split(","))) : Collections.emptySet();
         List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && seckillHoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
