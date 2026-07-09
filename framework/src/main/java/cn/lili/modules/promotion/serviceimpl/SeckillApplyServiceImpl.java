@@ -270,7 +270,9 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         LambdaQueryWrapper<SeckillApply> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
-        List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && seckill.getHours().contains(i.getTimeLine().toString())).collect(Collectors.toList());
+        // ⚡ Bolt: Hoist invariant string processing and use Set for O(1) checks
+        Set<String> rangeHours = seckill.getHours() != null ? new HashSet<>(Arrays.asList(seckill.getHours().split(","))) : new HashSet<>();
+        List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && rangeHours.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
             //获取参与活动的商品信息
@@ -308,6 +310,9 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
      * @param seckillApplyList 秒杀活动申请列表
      */
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
+        if (hours == null) {
+            throw new ServiceException(ResultCode.SECKILL_TIME_ERROR);
+        }
         // ⚡ Bolt: Optimize existSku to Set for O(1) existence checks
         Set<String> existSku = new HashSet<>();
         // ⚡ Bolt: Hoist invariant split outside loop and use Set for O(1) checks
