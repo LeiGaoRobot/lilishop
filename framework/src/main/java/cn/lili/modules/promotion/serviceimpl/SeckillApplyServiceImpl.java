@@ -312,7 +312,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
         // Bolt: Optimize duplicate check to O(1) using HashSet and hoist string split outside the loop
         Set<String> existSku = new HashSet<>();
-        List<String> rangeHours = Arrays.asList(hours.split(","));
+        Set<String> rangeHours = new HashSet<>(Arrays.asList(hours.split(",")));
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
