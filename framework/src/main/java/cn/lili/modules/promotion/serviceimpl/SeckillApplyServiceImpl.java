@@ -308,6 +308,9 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
      * @param seckillApplyList 秒杀活动申请列表
      */
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
+        if (hours == null) {
+            throw new ServiceException(ResultCode.SECKILL_TIME_ERROR);
+        }
         // Bolt: Optimize lookup by converting ArrayList to HashSet for O(1) duplicate checks
         Set<String> existSku = new HashSet<>();
         // Bolt: Hoist string splitting and stream operations outside loop, use Set for O(1) checks
