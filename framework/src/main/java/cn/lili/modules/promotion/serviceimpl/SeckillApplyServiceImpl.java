@@ -310,15 +310,15 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
         // Bolt: Use Set for O(1) lookups instead of List for existSku
         Set<String> existSku = new HashSet<>();
-        // Bolt: Hoist string splitting outside the loop
-        List<String> rangeHoursList = Arrays.asList(hours.split(","));
+        // Bolt: Hoist string splitting outside the loop and convert to Set for O(1) lookup
+        Set<String> rangeHoursSet = hours == null ? new HashSet<>() : new HashSet<>(Arrays.asList(hours.split(",")));
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
             }
             //检查秒杀活动申请的时刻，是否存在在秒杀活动的时间段内
-            // Bolt: Replace stream overhead with direct contains check on pre-split list
-            boolean containsSame = rangeHoursList.contains(seckillApply.getTimeLine().toString());
+            // Bolt: Replace stream overhead with direct contains check on pre-split Set
+            boolean containsSame = rangeHoursSet.contains(seckillApply.getTimeLine().toString());
             if (!containsSame) {
                 throw new ServiceException(ResultCode.SECKILL_TIME_ERROR);
             }
