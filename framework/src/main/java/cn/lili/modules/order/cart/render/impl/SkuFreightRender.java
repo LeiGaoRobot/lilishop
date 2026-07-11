@@ -62,7 +62,8 @@ public class SkuFreightRender implements CartRenderStep {
                     List<String> skuIds = freightTemplateGroup.getValue();
 
                     //当前购物车商品列表
-                    List<CartSkuVO> currentCartSkus = cartSkuVOS.stream().filter(item -> skuIds.contains(item.getGoodsSku().getId())).collect(Collectors.toList());
+                    java.util.Set<String> skuIdSet = new java.util.HashSet<>(skuIds); // ⚡ Bolt: Convert to Set for O(1) lookup
+                    List<CartSkuVO> currentCartSkus = cartSkuVOS.stream().filter(item -> skuIdSet.contains(item.getGoodsSku().getId())).collect(Collectors.toList());
 
                     //寻找对应对商品运费计算模版
                     FreightTemplateVO freightTemplate = freightTemplateService.getFreightTemplate(freightTemplateGroup.getKey());
