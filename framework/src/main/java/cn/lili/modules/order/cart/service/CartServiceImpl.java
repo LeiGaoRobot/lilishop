@@ -300,15 +300,19 @@ public class CartServiceImpl implements CartService {
     public void delete(String[] skuIds) {
         TradeDTO tradeDTO = this.readDTO(CartTypeEnum.CART);
         List<CartSkuVO> cartSkuVOS = tradeDTO.getSkuList();
+
+        // ⚡ Bolt: Use HashSet for O(1) lookups instead of O(N) nested loop, and avoid ArrayList.removeAll()
+        Set<String> skuIdSet = new HashSet<>(Arrays.asList(skuIds));
         List<CartSkuVO> deleteVos = new ArrayList<>();
         for (CartSkuVO cartSkuVO : cartSkuVOS) {
-            for (String skuId : skuIds) {
-                if (cartSkuVO.getGoodsSku().getId().equals(skuId)) {
-                    deleteVos.add(cartSkuVO);
-                }
+            if (skuIdSet.contains(cartSkuVO.getGoodsSku().getId())) {
+                deleteVos.add(cartSkuVO);
             }
         }
-        cartSkuVOS.removeAll(deleteVos);
+
+        if (!deleteVos.isEmpty()) {
+            cartSkuVOS.removeAll(deleteVos);
+        }
         resetTradeDTO(tradeDTO);
     }
 
@@ -325,7 +329,9 @@ public class CartServiceImpl implements CartService {
                 deleteVos.add(cartSkuVO);
             }
         }
-        cartSkuVOS.removeAll(deleteVos);
+        if (!deleteVos.isEmpty()) {
+            cartSkuVOS.removeAll(deleteVos);
+        }
         //清除选择的优惠券
         tradeDTO.setPlatformCoupon(null);
         tradeDTO.setStoreCoupons(null);
