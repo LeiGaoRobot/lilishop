@@ -81,7 +81,7 @@ public class SkuFreightRender implements CartRenderStep {
                         String addressId = memberAddress.getConsigneeAddressIdPath().split(",")[1];
                         for (FreightTemplateChild templateChild : freightTemplate.getFreightTemplateChildList()) {
                             //模版匹配判定
-                            if (templateChild.getAreaId().contains(addressId)) {
+                            if (templateChild.getAreaId() != null && new java.util.HashSet<>(java.util.Arrays.asList(templateChild.getAreaId().split(","))).contains(addressId)) {
                                 freightTemplateChild = templateChild;
                                 break;
                             }
