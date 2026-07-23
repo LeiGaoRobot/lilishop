@@ -1,3 +1,3 @@
-## 2023-10-27 - [O(N^2) Anti-Pattern in Batch Processing]
-**Learning:** Found O(N^2) complexity in batch processing logic where `List.contains()` is used inside a stream filter over a large collection.
-**Action:** Always convert collections to `Set` (e.g., `HashSet`) before using `.contains()` in loops or stream filters to achieve O(1) lookup time, especially for bulk operations.
+## 2026-07-23 - Avoid O(N) overhead and incorrect matching in string.contains() for delimited strings
+**Learning:** Found an anti-pattern where a comma-separated string (e.g., `seckill.getHours()`) was used directly with `.contains()` inside a stream filter. This is slow (O(N) operation inside O(M) stream) and risks false positives due to substring matches (e.g. "12".contains("2") is true).
+**Action:** When filtering using delimited strings, split the string into an Array/List and add to a `Set` (e.g., `Set<String> set = new HashSet<>(Arrays.asList(string.split(",")))`) BEFORE the stream/loop, ensuring O(1) exact matching time and correctness.
