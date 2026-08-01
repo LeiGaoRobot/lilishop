@@ -271,7 +271,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
         // Bolt: Optimize O(N^2) String.contains in filter to O(1) Set.contains
-        java.util.Set<String> hoursSet = new java.util.HashSet<>(java.util.Arrays.asList(seckill.getHours().split(",")));
+        Set<String> hoursSet = seckill.getHours() != null ? new HashSet<>(Arrays.asList(seckill.getHours().split(","))) : Collections.emptySet();
         List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && hoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
@@ -311,8 +311,8 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
      */
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
         // Bolt: Hoist array split outside loop and use Set for O(1) lookups
-        java.util.Set<String> rangeHoursSet = new java.util.HashSet<>(java.util.Arrays.asList(hours.split(",")));
-        java.util.Set<String> existSku = new java.util.HashSet<>();
+        Set<String> rangeHoursSet = hours != null ? new HashSet<>(Arrays.asList(hours.split(","))) : Collections.emptySet();
+        Set<String> existSku = new HashSet<>();
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
