@@ -1107,7 +1107,8 @@ public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements
         //商品分类索引
         if (CollUtil.isNotEmpty(categoryList) && CharSequenceUtil.isNotEmpty(goodsSku.getCategoryPath())) {
             StringBuilder categoryNamePath = new StringBuilder();
-            categoryList.stream().filter(o -> goodsSku.getCategoryPath().contains(o.get("id").toString())).forEach(p -> categoryNamePath.append(p.get("name")).append(","));
+            java.util.Set<String> categoryIdSet = new java.util.HashSet<>(java.util.Arrays.asList(goodsSku.getCategoryPath().split(",")));
+            categoryList.stream().filter(o -> categoryIdSet.contains(o.get("id").toString())).forEach(p -> categoryNamePath.append(p.get("name")).append(","));
             if (CharSequenceUtil.isNotEmpty(categoryNamePath)) {
                 categoryNamePath.deleteCharAt(categoryNamePath.length() - 1);
                 index.setCategoryNamePath(categoryNamePath.toString());
@@ -1124,7 +1125,8 @@ public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements
         //店铺分类索引
         if (CollUtil.isNotEmpty(storeCategoryList) && CharSequenceUtil.isNotEmpty(goodsSku.getStoreCategoryPath())) {
             StringBuilder storeCategoryNamePath = new StringBuilder();
-            storeCategoryList.stream().filter(o -> goodsSku.getStoreCategoryPath().contains(o.get("id").toString())).forEach(p -> storeCategoryNamePath.append(p.get("label_name").toString()).append(","));
+            java.util.Set<String> storeCategoryIdSet = new java.util.HashSet<>(java.util.Arrays.asList(goodsSku.getStoreCategoryPath().split(",")));
+            storeCategoryList.stream().filter(o -> storeCategoryIdSet.contains(o.get("id").toString())).forEach(p -> storeCategoryNamePath.append(p.get("label_name").toString()).append(","));
             if (CharSequenceUtil.isNotEmpty(storeCategoryNamePath)) {
                 storeCategoryNamePath.deleteCharAt(storeCategoryNamePath.length() - 1);
                 index.setStoreCategoryNamePath(storeCategoryNamePath.toString());
