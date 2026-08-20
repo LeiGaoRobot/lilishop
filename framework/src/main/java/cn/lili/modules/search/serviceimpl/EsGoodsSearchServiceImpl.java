@@ -584,6 +584,9 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
      */
     private void propSearch(BoolQueryBuilder filterBuilder, EsGoodsSearchDTO searchDTO) {
         String[] props = searchDTO.getProp().split("@");
+        // Bolt: Optimized O(N^2) list.contains to O(1) set.add
+        Set<String> nameSet = new HashSet<>();
+        Set<String> valueSet = new HashSet<>();
         List<String> nameList = new ArrayList<>();
         List<String> valueList = new ArrayList<>();
         Map<String, List<String>> valueMap = new HashMap<>(16);
@@ -591,10 +594,10 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
             String[] propValues = prop.split("_");
             String name = propValues[0];
             String value = propValues[1];
-            if (!nameList.contains(name)) {
+            if (nameSet.add(name)) {
                 nameList.add(name);
             }
-            if (!valueList.contains(value)) {
+            if (valueSet.add(value)) {
                 valueList.add(value);
             }
             //将同一规格名下的规格值分组
