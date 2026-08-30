@@ -584,19 +584,16 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
      */
     private void propSearch(BoolQueryBuilder filterBuilder, EsGoodsSearchDTO searchDTO) {
         String[] props = searchDTO.getProp().split("@");
-        List<String> nameList = new ArrayList<>();
-        List<String> valueList = new ArrayList<>();
+        // ⚡ Bolt: Optimize List.contains to Set in loop for O(1) lookups
+        Set<String> nameList = new LinkedHashSet<>();
+        Set<String> valueList = new LinkedHashSet<>();
         Map<String, List<String>> valueMap = new HashMap<>(16);
         for (String prop : props) {
             String[] propValues = prop.split("_");
             String name = propValues[0];
             String value = propValues[1];
-            if (!nameList.contains(name)) {
-                nameList.add(name);
-            }
-            if (!valueList.contains(value)) {
-                valueList.add(value);
-            }
+            nameList.add(name);
+            valueList.add(value);
             //将同一规格名下的规格值分组
             if (!valueMap.containsKey(name)) {
                 List<String> values = new ArrayList<>();
@@ -615,8 +612,8 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
             }
             filterBuilder.must(shouldBuilder);
         }
-        searchDTO.getNotShowCol().put(ATTR_NAME_KEY, nameList);
-        searchDTO.getNotShowCol().put(ATTR_VALUE_KEY, valueList);
+        searchDTO.getNotShowCol().put(ATTR_NAME_KEY, new ArrayList<>(nameList));
+        searchDTO.getNotShowCol().put(ATTR_VALUE_KEY, new ArrayList<>(valueList));
     }
 
     /**
