@@ -371,8 +371,10 @@ public class CartServiceImpl implements CartService {
             }
 
             List<String> storeIds = new ArrayList<>();
+            java.util.Set<String> storeIdSet = new java.util.LinkedHashSet<>();
             for (CartSkuVO cartSkuVO : tradeDTO.getSkuList()) {
-                if (!storeIds.contains(cartSkuVO.getStoreId())) {
+                // ⚡ Bolt: Optimize O(N^2) List.contains to O(1) Set.add
+                if (storeIdSet.add(cartSkuVO.getStoreId())) {
                     storeIds.add(cartSkuVO.getStoreId());
                 }
             }
