@@ -270,7 +270,9 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         LambdaQueryWrapper<SeckillApply> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
-        List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && seckill.getHours().contains(i.getTimeLine().toString())).collect(Collectors.toList());
+        // Bolt: Hoist string split and Set conversion outside filter to avoid O(N) allocations and string splitting per item
+        java.util.Set<String> rangeHoursSet = new java.util.HashSet<>(java.util.Arrays.asList(seckill.getHours().split(",")));
+        List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && rangeHoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
             //获取参与活动的商品信息
@@ -308,22 +310,22 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
      * @param seckillApplyList 秒杀活动申请列表
      */
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
-        List<String> existSku = new ArrayList<>();
+        // Bolt: Optimize List.contains to Set for O(1) lookup
+        java.util.Set<String> existSku = new java.util.HashSet<>();
+        // Bolt: Hoist string split and Set conversion outside loop to avoid O(N) allocations and redundant stream creations
+        java.util.Set<String> rangeHoursSet = new java.util.HashSet<>(java.util.Arrays.asList(hours.split(",")));
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
             }
             //检查秒杀活动申请的时刻，是否存在在秒杀活动的时间段内
-            String[] rangeHours = hours.split(",");
-            boolean containsSame = Arrays.stream(rangeHours).anyMatch(i -> i.equals(seckillApply.getTimeLine().toString()));
-            if (!containsSame) {
+            if (!rangeHoursSet.contains(seckillApply.getTimeLine().toString())) {
                 throw new ServiceException(ResultCode.SECKILL_TIME_ERROR);
             }
             //检查商品是否参加多个时间段的活动
-            if (existSku.contains(seckillApply.getSkuId())) {
+            // Bolt: Set.add returns false if item already exists, O(1) check and insert
+            if (!existSku.add(seckillApply.getSkuId())) {
                 throw new ServiceException(seckillApply.getGoodsName() + "该商品不能同时参加多个时间段的活动");
-            } else {
-                existSku.add(seckillApply.getSkuId());
             }
 
         }
