@@ -691,13 +691,23 @@ public class CartServiceImpl implements CartService {
             return cartSkuVOS;
         } else if (memberCoupon.getScopeType().equals(PromotionsScopeTypeEnum.PORTION_GOODS_CATEGORY.name())) {
             //分类路径是否包含
-            return cartSkuVOS.stream().filter(i -> CharSequenceUtil.contains(memberCoupon.getScopeId(), i.getGoodsSku().getCategoryPath())).collect(Collectors.toList());
+            Set<String> scopeSet = new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
+            return cartSkuVOS.stream().filter(i -> {
+                String[] categoryPaths = i.getGoodsSku().getCategoryPath().split(",");
+                return Arrays.stream(categoryPaths).anyMatch(scopeSet::contains);
+            }).collect(Collectors.toList());
         } else if (memberCoupon.getScopeType().equals(PromotionsScopeTypeEnum.PORTION_GOODS.name())) {
             //范围关联ID是否包含
-            return cartSkuVOS.stream().filter(i -> CharSequenceUtil.contains(memberCoupon.getScopeId(), i.getGoodsSku().getId())).collect(Collectors.toList());
+            Set<String> scopeSet = new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
+            return cartSkuVOS.stream().filter(i -> scopeSet.contains(i.getGoodsSku().getId())).collect(Collectors.toList());
         } else if (memberCoupon.getScopeType().equals(PromotionsScopeTypeEnum.PORTION_SHOP_CATEGORY.name())) {
             //店铺分类路径是否包含
-            return cartSkuVOS.stream().filter(i -> CharSequenceUtil.contains(memberCoupon.getScopeId(), i.getGoodsSku().getStoreCategoryPath())).collect(Collectors.toList());
+            Set<String> scopeSet = new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
+            return cartSkuVOS.stream().filter(i -> {
+                if (CharSequenceUtil.isEmpty(i.getGoodsSku().getStoreCategoryPath())) return false;
+                String[] storeCategoryPaths = i.getGoodsSku().getStoreCategoryPath().split(",");
+                return Arrays.stream(storeCategoryPaths).anyMatch(scopeSet::contains);
+            }).collect(Collectors.toList());
         }
         return new ArrayList<>();
     }
