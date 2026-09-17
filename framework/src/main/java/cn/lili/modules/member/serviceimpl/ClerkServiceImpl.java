@@ -110,9 +110,10 @@ public class ClerkServiceImpl extends ServiceImpl<ClerkMapper, Clerk> implements
                 if (!StringUtils.isEmpty(clerk.getRoleIds())) {
                     try {
                         List<String> memberRoles = Arrays.asList(clerk.getRoleIds().split(","));
+                        java.util.Set<String> memberRoleSet = new java.util.HashSet<>(memberRoles);
                         clerkVO.setRoles(
                                 roles.stream().filter
-                                        (role -> memberRoles.contains(role.getId()))
+                                        (role -> memberRoleSet.contains(role.getId()))
                                         .collect(Collectors.toList())
                         );
                     } catch (Exception e) {
