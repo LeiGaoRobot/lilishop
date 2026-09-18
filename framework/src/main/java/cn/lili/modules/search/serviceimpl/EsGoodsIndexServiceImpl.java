@@ -94,7 +94,7 @@ import java.util.stream.Collectors;
 @Service
 public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements EsGoodsIndexService {
 
-    private static final String IGNORE_FIELD = "serialVersionUID,promotionMap,id,goodsId";
+    private static final java.util.Set<String> IGNORE_FIELD = new java.util.HashSet<>(java.util.Arrays.asList("serialVersionUID", "promotionMap", "id", "goodsId")); // ⚡ Bolt: Using Set for O(1) lookups
     private static final String KEY_SUCCESS = "success";
     private static final String KEY_FAIL = "fail";
     private static final String KEY_PROCESSED = "processed";
