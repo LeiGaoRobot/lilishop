@@ -95,6 +95,7 @@ import java.util.stream.Collectors;
 public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements EsGoodsIndexService {
 
     private static final String IGNORE_FIELD = "serialVersionUID,promotionMap,id,goodsId";
+    private static final java.util.Set<String> IGNORE_FIELD_SET = new java.util.HashSet<>(java.util.Arrays.asList(IGNORE_FIELD.split(",")));
     private static final String KEY_SUCCESS = "success";
     private static final String KEY_FAIL = "fail";
     private static final String KEY_PROCESSED = "processed";
@@ -521,7 +522,7 @@ public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements
         // 通过反射获取全部字段，在根据参数字段是否为空，设置要更新的字段
         for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
             Object fieldValue = ReflectUtil.getFieldValue(goods, entry.getValue());
-            if (fieldValue != null && !IGNORE_FIELD.contains(entry.getKey())) {
+            if (fieldValue != null && !IGNORE_FIELD_SET.contains(entry.getKey())) {
                 ReflectUtil.setFieldValue(goodsIndex, entry.getValue(), fieldValue);
             }
         }

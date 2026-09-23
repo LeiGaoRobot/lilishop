@@ -14,6 +14,7 @@ import java.util.Map;
 public class EsIndexUtil {
 
     private static final String IGNORE_FIELD = "serialVersionUID,promotionMap,id,goodsId";
+    private static final java.util.Set<String> IGNORE_FIELD_SET = new java.util.HashSet<>(java.util.Arrays.asList(IGNORE_FIELD.split(",")));
 
     public static Map<String, Object> getUpdateIndexFieldsMap(EsGoodsIndex queryGoodsIndex, EsGoodsIndex updateGoodsIndex) {
         Map<String, Object> queryFieldsMap = new HashMap<>();
@@ -22,10 +23,10 @@ public class EsIndexUtil {
         for (Map.Entry<String, Field> entry : ReflectUtil.getFieldMap(EsGoodsIndex.class).entrySet()) {
             Object queryFieldValue = ReflectUtil.getFieldValue(queryGoodsIndex, entry.getValue());
             Object updateFieldValue = ReflectUtil.getFieldValue(updateGoodsIndex, entry.getValue());
-            if (queryFieldValue != null && !IGNORE_FIELD.contains(entry.getKey())) {
+            if (queryFieldValue != null && !IGNORE_FIELD_SET.contains(entry.getKey())) {
                 ReflectUtil.setFieldValue(queryFieldsMap, entry.getValue(), queryFieldValue);
             }
-            if (updateFieldValue != null && !IGNORE_FIELD.contains(entry.getKey())) {
+            if (updateFieldValue != null && !IGNORE_FIELD_SET.contains(entry.getKey())) {
                 ReflectUtil.setFieldValue(updateFieldsMap, entry.getValue(), updateFieldValue);
             }
         }
