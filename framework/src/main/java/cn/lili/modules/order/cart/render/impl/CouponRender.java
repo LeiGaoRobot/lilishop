@@ -155,7 +155,9 @@ public class CouponRender implements CartRenderStep {
                 return filterSku;
             case PORTION_GOODS:
                 //按照商品过滤
-                filterSku = filterSku.stream().filter(cartSkuVO -> memberCoupon.getScopeId().contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
+                // ⚡ Bolt: Optimize comma-separated string contains check to O(1) Set lookup to prevent partial match bugs and improve performance
+                Set<String> goodsScopeSet = new LinkedHashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
+                filterSku = filterSku.stream().filter(cartSkuVO -> goodsScopeSet.contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
                 break;
 
             case PORTION_SHOP_CATEGORY:
@@ -166,12 +168,14 @@ public class CouponRender implements CartRenderStep {
             case PORTION_GOODS_CATEGORY:
 
                 //按照店铺分类过滤
+                // ⚡ Bolt: Parse comma-separated string into O(1) Set outside the stream to prevent partial match bugs and avoid O(N^2) evaluation
+                Set<String> categoryScopeSet = new LinkedHashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
                 filterSku = filterSku.stream().filter(cartSkuVO -> {
                     //平台分类获取
                     String[] categoryPath = cartSkuVO.getGoodsSku().getCategoryPath().split(",");
                     //平台三级分类
                     String categoryId = categoryPath[categoryPath.length - 1];
-                    return memberCoupon.getScopeId().contains(categoryId);
+                    return categoryScopeSet.contains(categoryId);
                 }).collect(Collectors.toList());
                 break;
             default:
@@ -188,13 +192,15 @@ public class CouponRender implements CartRenderStep {
      * @return 优惠券按照店铺分类过滤的购物车商品信息
      */
     private List<CartSkuVO> filterPromotionShopCategory(List<CartSkuVO> filterSku, MemberCoupon memberCoupon) {
+        // ⚡ Bolt: Parse comma-separated string into O(1) Set outside the stream to prevent partial match bugs and avoid O(N^2) evaluation
+        Set<String> scopeSet = new LinkedHashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")));
         return filterSku.stream().filter(cartSkuVO -> {
             if (CharSequenceUtil.isNotEmpty(cartSkuVO.getGoodsSku().getStoreCategoryPath())) {
                 //获取店铺分类
                 String[] storeCategoryPath = cartSkuVO.getGoodsSku().getStoreCategoryPath().split(",");
                 for (String category : storeCategoryPath) {
                     //店铺分类只要有一项吻合，即可返回true
-                    if (memberCoupon.getScopeId().contains(category)) {
+                    if (scopeSet.contains(category)) {
                         return true;
                     }
                 }
