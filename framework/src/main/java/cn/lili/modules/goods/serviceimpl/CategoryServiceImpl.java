@@ -136,7 +136,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
 
     @Override
     public List<CategoryVO> getStoreCategory(String[] categories) {
-        List<String> arr = Arrays.asList(categories.clone());
+        // Convert array to HashSet for O(1) lookups inside the stream filter, changing O(N^2) to O(N) complexity
+        java.util.Set<String> arr = new java.util.HashSet<>(java.util.Arrays.asList(categories));
         return categoryTree().stream()
                 .filter(item -> arr.contains(item.getId())).collect(Collectors.toList());
     }
