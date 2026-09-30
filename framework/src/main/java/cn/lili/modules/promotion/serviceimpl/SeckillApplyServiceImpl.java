@@ -271,7 +271,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
         // Bolt: Convert hours string to Set for O(1) exact matching and avoid partial substring match bugs
-        java.util.Set<String> hoursSet = new java.util.HashSet<>(java.util.Arrays.asList(seckill.getHours().split(",")));
+        Set<String> hoursSet = new HashSet<>(Arrays.asList(seckill.getHours().split(",")));
         List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && hoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
@@ -311,8 +311,8 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
      */
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
         // Bolt: Optimize O(N^2) complexity by using Set for O(1) lookups and hoisting string split outside the loop
-        java.util.Set<String> existSku = new java.util.HashSet<>();
-        java.util.Set<String> rangeHours = new java.util.HashSet<>(java.util.Arrays.asList(hours.split(",")));
+        Set<String> existSku = new HashSet<>();
+        Set<String> rangeHours = new HashSet<>(Arrays.asList(hours.split(",")));
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
