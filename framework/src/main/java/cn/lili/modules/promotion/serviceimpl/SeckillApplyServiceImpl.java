@@ -270,8 +270,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         LambdaQueryWrapper<SeckillApply> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
-        List<String> hoursList = Arrays.asList(seckill.getHours().split(","));
-        Set<String> hoursSet = new HashSet<>(hoursList);
+        Set<String> hoursSet = new HashSet<>(Arrays.asList(seckill.getHours().split(",")));
         List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && hoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
