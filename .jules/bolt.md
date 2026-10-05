@@ -1,3 +1,6 @@
 ## 2023-10-27 - [O(N^2) Anti-Pattern in Batch Processing]
 **Learning:** Found O(N^2) complexity in batch processing logic where `List.contains()` is used inside a stream filter over a large collection.
 **Action:** Always convert collections to `Set` (e.g., `HashSet`) before using `.contains()` in loops or stream filters to achieve O(1) lookup time, especially for bulk operations.
+## 2026-10-04 - Optimize `String.contains()` partial match risks when parsing delimited strings
+**Learning:** Found an anti-pattern in `SeckillApplyServiceImpl` where `seckill.getHours().contains(i.getTimeLine().toString())` was used directly inside a stream filter for time validation. Using `String.contains()` on delimited strings (e.g., `hours = "10,12"`) is prone to partial substring match bugs (e.g., matching `"1"`). Additionally, checking for membership inside loops with `contains()` leads to O(N^2) complexity, and repeatedly splitting strings causes redundant allocation.
+**Action:** When handling delimited strings for membership tests, always hoist the `split()` operation and parse it into a `Set` (preferring `LinkedHashSet` if insertion order should be preserved) outside loops and stream filters to guarantee correctness, avoid partial matches, and achieve O(1) lookup performance. Also use `Set.add()` for combined existence check and insertion.
