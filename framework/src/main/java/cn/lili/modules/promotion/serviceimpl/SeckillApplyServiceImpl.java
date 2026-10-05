@@ -271,7 +271,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
         // ⚡ Bolt: Hoist split operation and use LinkedHashSet to prevent partial match correctness bugs (e.g. "10,12" contains "1") and for O(1) lookups.
-        java.util.Set<String> hoursSet = new java.util.LinkedHashSet<>(java.util.Arrays.asList(seckill.getHours().split(",")));
+        Set<String> hoursSet = new HashSet<>(Arrays.asList(seckill.getHours().split(",")));
         List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && hoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
@@ -311,9 +311,9 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
      */
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
         // ⚡ Bolt: Use HashSet for O(1) lookups and prevent O(N^2) complexity. Use Set.add() for combined existence check and insertion.
-        java.util.Set<String> existSku = new java.util.HashSet<>();
+        Set<String> existSku = new HashSet<>();
         // ⚡ Bolt: Hoist string splitting and create a Set outside the loop for O(1) lookup and to avoid redundant allocations.
-        java.util.Set<String> rangeHours = new java.util.HashSet<>(java.util.Arrays.asList(hours.split(",")));
+        Set<String> rangeHours = new HashSet<>(Arrays.asList(hours.split(",")));
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
