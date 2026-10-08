@@ -70,8 +70,13 @@ public class FullDiscountRender implements CartRenderStep {
                     //写入满减活动
                     cart.setFullDiscount(fullDiscountVO);
                     Map<String, Double> skuPriceDetail = new HashMap<>(16);
+                    Set<String> scopeGoodsSet = null;
+                    if (PromotionsScopeTypeEnum.PORTION_GOODS.name().equals(fullDiscountVO.getScopeType()) && fullDiscountVO.getScopeId() != null) {
+                        scopeGoodsSet = new java.util.LinkedHashSet<>(java.util.Arrays.asList(fullDiscountVO.getScopeId().split(",")));
+                    }
                     for (CartSkuVO cartSkuVO : cart.getSkuList()) {
-                        if (PromotionsScopeTypeEnum.PORTION_GOODS.name().equals(fullDiscountVO.getScopeType()) && fullDiscountVO.getScopeId() != null && !fullDiscountVO.getScopeId().contains(cartSkuVO.getGoodsSku().getId())) {
+                        // ⚡ Bolt: Optimize String.contains to O(1) Set lookup and fix partial match bug
+                        if (scopeGoodsSet != null && !scopeGoodsSet.contains(cartSkuVO.getGoodsSku().getId())) {
                             continue;
                         }
                         skuPriceDetail.put(cartSkuVO.getGoodsSku().getId(), cartSkuVO.getPriceDetailDTO().getGoodsPrice());
