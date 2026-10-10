@@ -1106,8 +1106,10 @@ public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements
         }
         //商品分类索引
         if (CollUtil.isNotEmpty(categoryList) && CharSequenceUtil.isNotEmpty(goodsSku.getCategoryPath())) {
+            // Use LinkedHashSet for O(1) lookup and to prevent partial string match bugs
+            java.util.Set<String> categoryIdSet = new java.util.LinkedHashSet<>(java.util.Arrays.asList(goodsSku.getCategoryPath().split(",")));
             StringBuilder categoryNamePath = new StringBuilder();
-            categoryList.stream().filter(o -> goodsSku.getCategoryPath().contains(o.get("id").toString())).forEach(p -> categoryNamePath.append(p.get("name")).append(","));
+            categoryList.stream().filter(o -> categoryIdSet.contains(o.get("id").toString())).forEach(p -> categoryNamePath.append(p.get("name")).append(","));
             if (CharSequenceUtil.isNotEmpty(categoryNamePath)) {
                 categoryNamePath.deleteCharAt(categoryNamePath.length() - 1);
                 index.setCategoryNamePath(categoryNamePath.toString());
@@ -1123,8 +1125,10 @@ public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements
         }
         //店铺分类索引
         if (CollUtil.isNotEmpty(storeCategoryList) && CharSequenceUtil.isNotEmpty(goodsSku.getStoreCategoryPath())) {
+            // Use LinkedHashSet for O(1) lookup and to prevent partial string match bugs
+            java.util.Set<String> storeCategoryIdSet = new java.util.LinkedHashSet<>(java.util.Arrays.asList(goodsSku.getStoreCategoryPath().split(",")));
             StringBuilder storeCategoryNamePath = new StringBuilder();
-            storeCategoryList.stream().filter(o -> goodsSku.getStoreCategoryPath().contains(o.get("id").toString())).forEach(p -> storeCategoryNamePath.append(p.get("label_name").toString()).append(","));
+            storeCategoryList.stream().filter(o -> storeCategoryIdSet.contains(o.get("id").toString())).forEach(p -> storeCategoryNamePath.append(p.get("label_name").toString()).append(","));
             if (CharSequenceUtil.isNotEmpty(storeCategoryNamePath)) {
                 storeCategoryNamePath.deleteCharAt(storeCategoryNamePath.length() - 1);
                 index.setStoreCategoryNamePath(storeCategoryNamePath.toString());
