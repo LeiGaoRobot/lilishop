@@ -88,7 +88,8 @@ public class AdminUserServiceImpl extends ServiceImpl<AdminUserMapper, AdminUser
             }
             if (!CharSequenceUtil.isEmpty(adminUser.getRoleIds())) {
                 try {
-                    List<String> memberRoles = Arrays.asList(adminUser.getRoleIds().split(","));
+                    // Optimize: Use Set for O(1) contains lookup during role filtering
+                    java.util.Set<String> memberRoles = new java.util.HashSet<>(Arrays.asList(adminUser.getRoleIds().split(",")));
                     adminUserVO.setRoles(
                             roles.stream().filter
                                             (role -> memberRoles.contains(role.getId()))

@@ -109,7 +109,8 @@ public class ClerkServiceImpl extends ServiceImpl<ClerkMapper, Clerk> implements
                 );
                 if (!StringUtils.isEmpty(clerk.getRoleIds())) {
                     try {
-                        List<String> memberRoles = Arrays.asList(clerk.getRoleIds().split(","));
+                        // Optimize: Use Set for O(1) contains lookup during role filtering
+                        java.util.Set<String> memberRoles = new java.util.HashSet<>(Arrays.asList(clerk.getRoleIds().split(",")));
                         clerkVO.setRoles(
                                 roles.stream().filter
                                         (role -> memberRoles.contains(role.getId()))
@@ -139,7 +140,8 @@ public class ClerkServiceImpl extends ServiceImpl<ClerkMapper, Clerk> implements
             clerkVO.setDepartmentTitle(storeDepartmentService.getById(clerk.getDepartmentId()).getTitle());
         }
         if (!StringUtils.isEmpty(clerk.getRoleIds())) {
-            List<String> memberRoles = Arrays.asList(clerk.getRoleIds().split(","));
+            // Optimize: Use Set for O(1) contains lookup during role filtering
+            java.util.Set<String> memberRoles = new java.util.HashSet<>(Arrays.asList(clerk.getRoleIds().split(",")));
             List<StoreRole> roles = storeRoleService.list(new QueryWrapper<StoreRole>()
                     .eq("store_id", UserContext.getCurrentUser().getStoreId()));
             clerkVO.setRoles(
