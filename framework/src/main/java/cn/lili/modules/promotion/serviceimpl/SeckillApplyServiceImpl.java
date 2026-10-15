@@ -271,7 +271,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
         // Bolt optimization: Parse comma-separated string into a Set for O(1) lookup inside the stream filter to prevent O(N^2) complexity and substring match bugs
-        java.util.Set<String> hoursSet = new java.util.LinkedHashSet<>(java.util.Arrays.asList(seckill.getHours().split(",")));
+        Set<String> hoursSet = new HashSet<>(Arrays.asList(seckill.getHours().split(",")));
         List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && hoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
