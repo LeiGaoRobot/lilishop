@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -88,7 +89,7 @@ public class AdminUserServiceImpl extends ServiceImpl<AdminUserMapper, AdminUser
             }
             if (!CharSequenceUtil.isEmpty(adminUser.getRoleIds())) {
                 try {
-                    List<String> memberRoles = Arrays.asList(adminUser.getRoleIds().split(","));
+                    Set<String> memberRoles = new java.util.HashSet<>(Arrays.asList(adminUser.getRoleIds().split(",")));
                     adminUserVO.setRoles(
                             roles.stream().filter
                                             (role -> memberRoles.contains(role.getId()))
