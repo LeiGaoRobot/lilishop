@@ -151,9 +151,9 @@ public class CouponRender implements CartRenderStep {
         }
 
         // Bolt: Parse scopeId into a Set outside stream filters to prevent O(N^2) contains overhead and matching bugs
-        java.util.Set<String> scopeIdSet = new java.util.HashSet<>();
+        Set<String> scopeIdSet = new HashSet<>();
         if (CharSequenceUtil.isNotEmpty(memberCoupon.getScopeId())) {
-            scopeIdSet.addAll(java.util.Arrays.asList(memberCoupon.getScopeId().split(",")));
+            scopeIdSet.addAll(Arrays.asList(memberCoupon.getScopeId().split(",")));
         }
         //优惠券类型判定
         switch (PromotionsScopeTypeEnum.valueOf(memberCoupon.getScopeType())) {
@@ -195,9 +195,9 @@ public class CouponRender implements CartRenderStep {
      */
     private List<CartSkuVO> filterPromotionShopCategory(List<CartSkuVO> filterSku, MemberCoupon memberCoupon) {
         // Bolt: Parse scopeId into a Set outside stream filters to prevent O(N^2) contains overhead and matching bugs
-        java.util.Set<String> scopeIdSet = new java.util.HashSet<>();
+        Set<String> scopeIdSet = new HashSet<>();
         if (CharSequenceUtil.isNotEmpty(memberCoupon.getScopeId())) {
-            scopeIdSet.addAll(java.util.Arrays.asList(memberCoupon.getScopeId().split(",")));
+            scopeIdSet.addAll(Arrays.asList(memberCoupon.getScopeId().split(",")));
         }
         return filterSku.stream().filter(cartSkuVO -> {
             if (CharSequenceUtil.isNotEmpty(cartSkuVO.getGoodsSku().getStoreCategoryPath())) {
