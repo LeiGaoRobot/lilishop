@@ -137,7 +137,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
     @Override
     public List<CategoryVO> getStoreCategory(String[] categories) {
         // Optimize: Convert array to Set for O(1) contains lookup instead of O(N) array/list contains
-        Set<String> arr = new java.util.HashSet<>(Arrays.asList(categories));
+        Set<String> arr = new HashSet<>(Arrays.asList(categories));
         return categoryTree().stream()
                 .filter(item -> arr.contains(item.getId())).collect(Collectors.toList());
     }
