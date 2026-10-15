@@ -72,7 +72,7 @@ public class FullDiscountRender implements CartRenderStep {
                     Map<String, Double> skuPriceDetail = new HashMap<>(16);
                     Set<String> scopeGoodsSet = null;
                     if (PromotionsScopeTypeEnum.PORTION_GOODS.name().equals(fullDiscountVO.getScopeType()) && fullDiscountVO.getScopeId() != null) {
-                        scopeGoodsSet = new java.util.LinkedHashSet<>(java.util.Arrays.asList(fullDiscountVO.getScopeId().split(",")));
+                        scopeGoodsSet = new HashSet<>(Arrays.asList(fullDiscountVO.getScopeId().split(",")));
                     }
                     for (CartSkuVO cartSkuVO : cart.getSkuList()) {
                         // ⚡ Bolt: Optimize String.contains to O(1) Set lookup and fix partial match bug
