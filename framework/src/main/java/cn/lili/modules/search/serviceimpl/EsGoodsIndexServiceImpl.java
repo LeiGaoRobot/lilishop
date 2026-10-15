@@ -1106,8 +1106,8 @@ public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements
         }
         //商品分类索引
         if (CollUtil.isNotEmpty(categoryList) && CharSequenceUtil.isNotEmpty(goodsSku.getCategoryPath())) {
-            // Use LinkedHashSet for O(1) lookup and to prevent partial string match bugs
-            java.util.Set<String> categoryIdSet = new java.util.LinkedHashSet<>(java.util.Arrays.asList(goodsSku.getCategoryPath().split(",")));
+            // Use HashSet for O(1) lookup and to prevent partial string match bugs
+            Set<String> categoryIdSet = new HashSet<>(Arrays.asList(goodsSku.getCategoryPath().split(",")));
             StringBuilder categoryNamePath = new StringBuilder();
             categoryList.stream().filter(o -> categoryIdSet.contains(o.get("id").toString())).forEach(p -> categoryNamePath.append(p.get("name")).append(","));
             if (CharSequenceUtil.isNotEmpty(categoryNamePath)) {
@@ -1125,8 +1125,8 @@ public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements
         }
         //店铺分类索引
         if (CollUtil.isNotEmpty(storeCategoryList) && CharSequenceUtil.isNotEmpty(goodsSku.getStoreCategoryPath())) {
-            // Use LinkedHashSet for O(1) lookup and to prevent partial string match bugs
-            java.util.Set<String> storeCategoryIdSet = new java.util.LinkedHashSet<>(java.util.Arrays.asList(goodsSku.getStoreCategoryPath().split(",")));
+            // Use HashSet for O(1) lookup and to prevent partial string match bugs
+            Set<String> storeCategoryIdSet = new HashSet<>(Arrays.asList(goodsSku.getStoreCategoryPath().split(",")));
             StringBuilder storeCategoryNamePath = new StringBuilder();
             storeCategoryList.stream().filter(o -> storeCategoryIdSet.contains(o.get("id").toString())).forEach(p -> storeCategoryNamePath.append(p.get("label_name").toString()).append(","));
             if (CharSequenceUtil.isNotEmpty(storeCategoryNamePath)) {
