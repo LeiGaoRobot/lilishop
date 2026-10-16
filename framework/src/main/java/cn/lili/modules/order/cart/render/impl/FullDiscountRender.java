@@ -70,8 +70,10 @@ public class FullDiscountRender implements CartRenderStep {
                     //写入满减活动
                     cart.setFullDiscount(fullDiscountVO);
                     Map<String, Double> skuPriceDetail = new HashMap<>(16);
+                    // 优化: 满减范围判断，将以逗号分隔的字符串转换为Set进行O(1)查找，放置在循环外避免每次O(N)切割及匹配
+                    Set<String> fullDiscountScopeSet = PromotionsScopeTypeEnum.PORTION_GOODS.name().equals(fullDiscountVO.getScopeType()) && fullDiscountVO.getScopeId() != null ? new LinkedHashSet<>(Arrays.asList(fullDiscountVO.getScopeId().split(","))) : null;
                     for (CartSkuVO cartSkuVO : cart.getSkuList()) {
-                        if (PromotionsScopeTypeEnum.PORTION_GOODS.name().equals(fullDiscountVO.getScopeType()) && fullDiscountVO.getScopeId() != null && !fullDiscountVO.getScopeId().contains(cartSkuVO.getGoodsSku().getId())) {
+                        if (fullDiscountScopeSet != null && !fullDiscountScopeSet.contains(cartSkuVO.getGoodsSku().getId())) {
                             continue;
                         }
                         skuPriceDetail.put(cartSkuVO.getGoodsSku().getId(), cartSkuVO.getPriceDetailDTO().getGoodsPrice());

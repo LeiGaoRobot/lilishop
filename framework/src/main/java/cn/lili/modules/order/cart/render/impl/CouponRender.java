@@ -154,8 +154,10 @@ public class CouponRender implements CartRenderStep {
             case ALL:
                 return filterSku;
             case PORTION_GOODS:
+                // 优化: 将逗号分隔的字符串转换为Set进行O(1)查找，避免每次循环O(N)的子串匹配导致的性能问题及潜在的错误匹配
+                Set<String> goodsScopeSet = memberCoupon.getScopeId() != null ? new LinkedHashSet<>(Arrays.asList(memberCoupon.getScopeId().split(","))) : Collections.emptySet();
                 //按照商品过滤
-                filterSku = filterSku.stream().filter(cartSkuVO -> memberCoupon.getScopeId().contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
+                filterSku = filterSku.stream().filter(cartSkuVO -> goodsScopeSet.contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
                 break;
 
             case PORTION_SHOP_CATEGORY:
@@ -164,14 +166,15 @@ public class CouponRender implements CartRenderStep {
                 break;
 
             case PORTION_GOODS_CATEGORY:
-
+                // 优化: 转换为Set
+                Set<String> categoryScopeSet = memberCoupon.getScopeId() != null ? new LinkedHashSet<>(Arrays.asList(memberCoupon.getScopeId().split(","))) : Collections.emptySet();
                 //按照店铺分类过滤
                 filterSku = filterSku.stream().filter(cartSkuVO -> {
                     //平台分类获取
                     String[] categoryPath = cartSkuVO.getGoodsSku().getCategoryPath().split(",");
                     //平台三级分类
                     String categoryId = categoryPath[categoryPath.length - 1];
-                    return memberCoupon.getScopeId().contains(categoryId);
+                    return categoryScopeSet.contains(categoryId);
                 }).collect(Collectors.toList());
                 break;
             default:
@@ -188,13 +191,15 @@ public class CouponRender implements CartRenderStep {
      * @return 优惠券按照店铺分类过滤的购物车商品信息
      */
     private List<CartSkuVO> filterPromotionShopCategory(List<CartSkuVO> filterSku, MemberCoupon memberCoupon) {
+        // 优化: 将逗号分隔的字符串转换为Set进行O(1)查找，防止在Stream循环中发生O(N^2)计算以及由于部分匹配带来的正确性Bug
+        Set<String> scopeSet = memberCoupon.getScopeId() != null ? new LinkedHashSet<>(Arrays.asList(memberCoupon.getScopeId().split(","))) : Collections.emptySet();
         return filterSku.stream().filter(cartSkuVO -> {
             if (CharSequenceUtil.isNotEmpty(cartSkuVO.getGoodsSku().getStoreCategoryPath())) {
                 //获取店铺分类
                 String[] storeCategoryPath = cartSkuVO.getGoodsSku().getStoreCategoryPath().split(",");
                 for (String category : storeCategoryPath) {
                     //店铺分类只要有一项吻合，即可返回true
-                    if (memberCoupon.getScopeId().contains(category)) {
+                    if (scopeSet.contains(category)) {
                         return true;
                     }
                 }
