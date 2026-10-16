@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 /**
@@ -110,7 +111,7 @@ public class ClerkServiceImpl extends ServiceImpl<ClerkMapper, Clerk> implements
                 );
                 if (!StringUtils.isEmpty(clerk.getRoleIds())) {
                     try {
-                        Set<String> memberRoles = new java.util.HashSet<>(Arrays.asList(clerk.getRoleIds().split(",")));
+                        Set<String> memberRoles = new HashSet<>(Arrays.asList(clerk.getRoleIds().split(",")));
                         clerkVO.setRoles(
                                 roles.stream().filter
                                         (role -> memberRoles.contains(role.getId()))
@@ -140,7 +141,7 @@ public class ClerkServiceImpl extends ServiceImpl<ClerkMapper, Clerk> implements
             clerkVO.setDepartmentTitle(storeDepartmentService.getById(clerk.getDepartmentId()).getTitle());
         }
         if (!StringUtils.isEmpty(clerk.getRoleIds())) {
-            Set<String> memberRoles = new java.util.HashSet<>(Arrays.asList(clerk.getRoleIds().split(",")));
+            Set<String> memberRoles = new HashSet<>(Arrays.asList(clerk.getRoleIds().split(",")));
             List<StoreRole> roles = storeRoleService.list(new QueryWrapper<StoreRole>()
                     .eq("store_id", UserContext.getCurrentUser().getStoreId()));
             clerkVO.setRoles(
