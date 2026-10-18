@@ -18,6 +18,8 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 /**
@@ -71,9 +73,15 @@ public class ManagerTokenGenerate extends AbstractTokenGenerate<AdminUser> {
     public Map<String, List<String>> permissionList(List<UserMenuVO> userMenuVOList) {
         Map<String, List<String>> permission = new HashMap<>(2);
 
-        List<String> superPermissions = new ArrayList<>();
-        List<String> queryPermissions = new ArrayList<>();
-        initPermission(superPermissions, queryPermissions);
+        // 优化: 将List改为LinkedHashSet以实现O(1)查找和去重，同时保留插入顺序，避免大批量菜单循环中进行O(N^2)的contains和removeAll计算
+        Set<String> superPermissions = new LinkedHashSet<>();
+        Set<String> queryPermissions = new LinkedHashSet<>();
+
+        List<String> initSuper = new ArrayList<>();
+        List<String> initQuery = new ArrayList<>();
+        initPermission(initSuper, initQuery);
+        superPermissions.addAll(initSuper);
+        queryPermissions.addAll(initQuery);
 
         //循环权限菜单
         if (userMenuVOList != null && !userMenuVOList.isEmpty()) {
@@ -86,17 +94,11 @@ public class ManagerTokenGenerate extends AbstractTokenGenerate<AdminUser> {
                     for (String url : permissionUrl) {
                         //如果是超级权限 则计入超级权限
                         if (Boolean.TRUE.equals(menu.getSuper())) {
-                            //如果已有超级权限，则这里就不做权限的累加
-                            if (!superPermissions.contains(url)) {
-                                superPermissions.add(url);
-                            }
+                            superPermissions.add(url);
                         }
                         //否则计入浏览权限
                         else {
-                            //没有权限，则累加。
-                            if (!queryPermissions.contains(url)) {
-                                queryPermissions.add(url);
-                            }
+                            queryPermissions.add(url);
                         }
                     }
                 }
@@ -104,8 +106,8 @@ public class ManagerTokenGenerate extends AbstractTokenGenerate<AdminUser> {
                 queryPermissions.removeAll(superPermissions);
             });
         }
-        permission.put(PermissionEnum.SUPER.name(), superPermissions);
-        permission.put(PermissionEnum.QUERY.name(), queryPermissions);
+        permission.put(PermissionEnum.SUPER.name(), new ArrayList<>(superPermissions));
+        permission.put(PermissionEnum.QUERY.name(), new ArrayList<>(queryPermissions));
         return permission;
     }
 
