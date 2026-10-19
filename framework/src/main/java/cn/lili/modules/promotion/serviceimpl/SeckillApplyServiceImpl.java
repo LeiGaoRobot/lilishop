@@ -309,9 +309,9 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
      */
     private void checkSeckillApplyList(String hours, List<SeckillApplyVO> seckillApplyList) {
         // ⚡ Bolt: Use Set for O(1) lookups instead of List.contains
-        java.util.Set<String> existSku = new java.util.HashSet<>();
+        Set<String> existSku = new HashSet<>();
         // ⚡ Bolt: Hoist string splitting and create a Set outside the loop for O(1) lookup
-        java.util.Set<String> rangeHoursSet = new java.util.HashSet<>(java.util.Arrays.asList(hours.split(",")));
+        Set<String> rangeHoursSet = new HashSet<>(Arrays.asList(hours.split(",")));
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
