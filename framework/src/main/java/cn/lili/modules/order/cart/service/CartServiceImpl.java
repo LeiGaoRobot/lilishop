@@ -689,15 +689,31 @@ public class CartServiceImpl implements CartService {
         //当初购物车商品中是否存在符合优惠券条件的商品sku
         if (memberCoupon.getScopeType().equals(PromotionsScopeTypeEnum.ALL.name())) {
             return cartSkuVOS;
-        } else if (memberCoupon.getScopeType().equals(PromotionsScopeTypeEnum.PORTION_GOODS_CATEGORY.name())) {
+        }
+
+        // ⚡ Bolt: Optimize comma-separated String lookup by splitting into a Set outside the loop for O(1) matching and correctness
+        // Add null check to maintain original CharSequenceUtil.contains() null-safety
+        Set<String> scopeSet = memberCoupon.getScopeId() != null
+            ? new HashSet<>(Arrays.asList(memberCoupon.getScopeId().split(",")))
+            : new HashSet<>();
+
+        if (memberCoupon.getScopeType().equals(PromotionsScopeTypeEnum.PORTION_GOODS_CATEGORY.name())) {
             //分类路径是否包含
-            return cartSkuVOS.stream().filter(i -> CharSequenceUtil.contains(memberCoupon.getScopeId(), i.getGoodsSku().getCategoryPath())).collect(Collectors.toList());
+            return cartSkuVOS.stream().filter(i -> {
+                if (i.getGoodsSku().getCategoryPath() == null) return false;
+                String[] categoryPaths = i.getGoodsSku().getCategoryPath().split(",");
+                return Arrays.stream(categoryPaths).anyMatch(scopeSet::contains);
+            }).collect(Collectors.toList());
         } else if (memberCoupon.getScopeType().equals(PromotionsScopeTypeEnum.PORTION_GOODS.name())) {
             //范围关联ID是否包含
-            return cartSkuVOS.stream().filter(i -> CharSequenceUtil.contains(memberCoupon.getScopeId(), i.getGoodsSku().getId())).collect(Collectors.toList());
+            return cartSkuVOS.stream().filter(i -> scopeSet.contains(i.getGoodsSku().getId())).collect(Collectors.toList());
         } else if (memberCoupon.getScopeType().equals(PromotionsScopeTypeEnum.PORTION_SHOP_CATEGORY.name())) {
             //店铺分类路径是否包含
-            return cartSkuVOS.stream().filter(i -> CharSequenceUtil.contains(memberCoupon.getScopeId(), i.getGoodsSku().getStoreCategoryPath())).collect(Collectors.toList());
+            return cartSkuVOS.stream().filter(i -> {
+                if (i.getGoodsSku().getStoreCategoryPath() == null) return false;
+                String[] storeCategoryPaths = i.getGoodsSku().getStoreCategoryPath().split(",");
+                return Arrays.stream(storeCategoryPaths).anyMatch(scopeSet::contains);
+            }).collect(Collectors.toList());
         }
         return new ArrayList<>();
     }
