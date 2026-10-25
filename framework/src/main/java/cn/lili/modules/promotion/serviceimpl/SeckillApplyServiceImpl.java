@@ -271,7 +271,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         queryWrapper.eq(SeckillApply::getSeckillId, seckill.getId());
 
         // ⚡ Bolt: Parse delimited hours into a Set for O(1) lookups and to prevent partial substring matches
-        java.util.Set<String> hoursSet = new java.util.LinkedHashSet<>(java.util.Arrays.asList(seckill.getHours().split(",")));
+        java.util.Set<String> hoursSet = new java.util.LinkedHashSet<>(java.util.Arrays.asList(seckill.getHours().split("\\s*,\\s*")));
         List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && hoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
         for (SeckillApply seckillApply : list) {
