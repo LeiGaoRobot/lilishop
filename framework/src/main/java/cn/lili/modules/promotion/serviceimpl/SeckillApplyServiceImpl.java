@@ -272,7 +272,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
 
         // 优化：使用 Set 替代 String.contains，并将拆分逻辑提至循环外以提升查找性能和准确性
 
-        java.util.Set<String> seckillHoursSet = new java.util.HashSet<>(java.util.Arrays.asList(seckill.getHours().split(",")));
+        java.util.Set<String> seckillHoursSet = new java.util.HashSet<>(java.util.Arrays.asList(seckill.getHours().split("\\s*,\\s*")));
 
         List<SeckillApply> list = this.list(queryWrapper).stream().filter(i -> i.getTimeLine() != null && seckillHoursSet.contains(i.getTimeLine().toString())).collect(Collectors.toList());
 
@@ -315,7 +315,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
         // 使用 Set 替代 List 进行存在性检查，将 O(N^2) 复杂度降为 O(N)
         java.util.Set<String> existSku = new java.util.HashSet<>();
         // 提取循环外的 split 和转换逻辑，避免每次循环都进行重复的 split 操作和 stream 遍历
-        java.util.Set<String> rangeHoursSet = new java.util.HashSet<>(java.util.Arrays.asList(hours.split(",")));
+        java.util.Set<String> rangeHoursSet = new java.util.HashSet<>(java.util.Arrays.asList(hours.split("\\s*,\\s*")));
         for (SeckillApplyVO seckillApply : seckillApplyList) {
             if (seckillApply.getPrice() > seckillApply.getOriginalPrice()) {
                 throw new ServiceException(ResultCode.SECKILL_PRICE_ERROR);
@@ -347,7 +347,7 @@ public class SeckillApplyServiceImpl extends ServiceImpl<SeckillApplyMapper, Sec
             //读取系统时间的时刻
             Calendar c = Calendar.getInstance();
             int hour = c.get(Calendar.HOUR_OF_DAY);
-            String[] split = seckill.getHours().split(",");
+            String[] split = seckill.getHours().split("\\s*,\\s*");
             int[] hoursSored = Arrays.stream(split).mapToInt(Integer::parseInt).toArray();
             Arrays.sort(hoursSored);
             for (int i = 0; i < hoursSored.length; i++) {
