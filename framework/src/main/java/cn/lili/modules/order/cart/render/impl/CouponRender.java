@@ -149,18 +149,24 @@ public class CouponRender implements CartRenderStep {
         if (filterSku == null || filterSku.isEmpty()) {
             return Collections.emptyList();
         }
+        // Convert scopeId to Set for O(1) matching and correctness
+        java.util.Set<String> scopeIdSet = new java.util.LinkedHashSet<>();
+        if (memberCoupon.getScopeId() != null) {
+            scopeIdSet.addAll(java.util.Arrays.asList(memberCoupon.getScopeId().split(",")));
+        }
+
         //优惠券类型判定
         switch (PromotionsScopeTypeEnum.valueOf(memberCoupon.getScopeType())) {
             case ALL:
                 return filterSku;
             case PORTION_GOODS:
                 //按照商品过滤
-                filterSku = filterSku.stream().filter(cartSkuVO -> memberCoupon.getScopeId().contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
+                filterSku = filterSku.stream().filter(cartSkuVO -> scopeIdSet.contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
                 break;
 
             case PORTION_SHOP_CATEGORY:
                 //按照店铺分类过滤
-                filterSku = this.filterPromotionShopCategory(filterSku, memberCoupon);
+                filterSku = this.filterPromotionShopCategory(filterSku, memberCoupon, scopeIdSet);
                 break;
 
             case PORTION_GOODS_CATEGORY:
@@ -171,7 +177,7 @@ public class CouponRender implements CartRenderStep {
                     String[] categoryPath = cartSkuVO.getGoodsSku().getCategoryPath().split(",");
                     //平台三级分类
                     String categoryId = categoryPath[categoryPath.length - 1];
-                    return memberCoupon.getScopeId().contains(categoryId);
+                    return scopeIdSet.contains(categoryId);
                 }).collect(Collectors.toList());
                 break;
             default:
@@ -187,14 +193,14 @@ public class CouponRender implements CartRenderStep {
      * @param memberCoupon 会员优惠
      * @return 优惠券按照店铺分类过滤的购物车商品信息
      */
-    private List<CartSkuVO> filterPromotionShopCategory(List<CartSkuVO> filterSku, MemberCoupon memberCoupon) {
+    private List<CartSkuVO> filterPromotionShopCategory(List<CartSkuVO> filterSku, MemberCoupon memberCoupon, java.util.Set<String> scopeIdSet) {
         return filterSku.stream().filter(cartSkuVO -> {
             if (CharSequenceUtil.isNotEmpty(cartSkuVO.getGoodsSku().getStoreCategoryPath())) {
                 //获取店铺分类
                 String[] storeCategoryPath = cartSkuVO.getGoodsSku().getStoreCategoryPath().split(",");
                 for (String category : storeCategoryPath) {
                     //店铺分类只要有一项吻合，即可返回true
-                    if (memberCoupon.getScopeId().contains(category)) {
+                    if (scopeIdSet.contains(category)) {
                         return true;
                     }
                 }
