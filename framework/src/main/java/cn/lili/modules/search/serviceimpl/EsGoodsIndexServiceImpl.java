@@ -94,7 +94,8 @@ import java.util.stream.Collectors;
 @Service
 public class EsGoodsIndexServiceImpl extends BaseElasticsearchService implements EsGoodsIndexService {
 
-    private static final String IGNORE_FIELD = "serialVersionUID,promotionMap,id,goodsId";
+    // ⚡ Bolt: Optimize comma-separated String.contains to Set.contains for O(1) lookups and to prevent partial match bugs.
+    private static final java.util.Set<String> IGNORE_FIELD = new java.util.LinkedHashSet<>(java.util.Arrays.asList("serialVersionUID", "promotionMap", "id", "goodsId"));
     private static final String KEY_SUCCESS = "success";
     private static final String KEY_FAIL = "fail";
     private static final String KEY_PROCESSED = "processed";

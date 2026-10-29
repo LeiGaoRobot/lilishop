@@ -13,7 +13,8 @@ import java.util.Map;
  **/
 public class EsIndexUtil {
 
-    private static final String IGNORE_FIELD = "serialVersionUID,promotionMap,id,goodsId";
+    // ⚡ Bolt: Optimize comma-separated String.contains to Set.contains for O(1) lookups and to prevent partial match bugs.
+    private static final java.util.Set<String> IGNORE_FIELD = new java.util.LinkedHashSet<>(java.util.Arrays.asList("serialVersionUID", "promotionMap", "id", "goodsId"));
 
     public static Map<String, Object> getUpdateIndexFieldsMap(EsGoodsIndex queryGoodsIndex, EsGoodsIndex updateGoodsIndex) {
         Map<String, Object> queryFieldsMap = new HashMap<>();
