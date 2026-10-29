@@ -374,9 +374,11 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
      * @param nameList 查询的规格名
      * @return 商品参数属性集合
      */
+    // ⚡ Bolt: Optimize List.contains to Set.contains for O(1) lookups during parameter aggregation
     private List<ParamOptions> buildGoodsParamOptions(ParsedStringTerms nameAgg, List<String> nameList) {
         List<ParamOptions> paramOptions = new ArrayList<>();
         List<? extends Terms.Bucket> nameBuckets = nameAgg.getBuckets();
+        java.util.Set<String> nameSet = nameList == null ? null : new java.util.HashSet<>(nameList);
 
         for (Terms.Bucket bucket : nameBuckets) {
             String name = bucket.getKey().toString();
@@ -393,7 +395,7 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
                 }
 
             }
-            if (nameList == null || !nameList.contains(name)) {
+            if (nameSet == null || !nameSet.contains(name)) {
                 paramOptions1.setKey(name);
                 paramOptions1.setValues(valueSelectorList);
                 paramOptions.add(paramOptions1);
