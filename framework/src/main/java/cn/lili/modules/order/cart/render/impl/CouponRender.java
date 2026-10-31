@@ -149,16 +149,19 @@ public class CouponRender implements CartRenderStep {
         if (filterSku == null || filterSku.isEmpty()) {
             return Collections.emptyList();
         }
+        //优惠券类型判定
+        switch (PromotionsScopeTypeEnum.valueOf(memberCoupon.getScopeType())) {
+            case ALL:
+                return filterSku;
+        }
+
         // Convert scopeId to Set for O(1) matching and correctness
         java.util.Set<String> scopeIdSet = new java.util.LinkedHashSet<>();
         if (memberCoupon.getScopeId() != null) {
             scopeIdSet.addAll(java.util.Arrays.asList(memberCoupon.getScopeId().split(",")));
         }
 
-        //优惠券类型判定
         switch (PromotionsScopeTypeEnum.valueOf(memberCoupon.getScopeType())) {
-            case ALL:
-                return filterSku;
             case PORTION_GOODS:
                 //按照商品过滤
                 filterSku = filterSku.stream().filter(cartSkuVO -> scopeIdSet.contains(cartSkuVO.getGoodsSku().getId())).collect(Collectors.toList());
