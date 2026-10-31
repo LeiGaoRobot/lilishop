@@ -370,12 +370,11 @@ public class CartServiceImpl implements CartService {
                 }
             }
 
-            List<String> storeIds = new ArrayList<>();
+            java.util.Set<String> storeIdsSet = new java.util.LinkedHashSet<>();
             for (CartSkuVO cartSkuVO : tradeDTO.getSkuList()) {
-                if (!storeIds.contains(cartSkuVO.getStoreId())) {
-                    storeIds.add(cartSkuVO.getStoreId());
-                }
+                storeIdsSet.add(cartSkuVO.getStoreId());
             }
+            List<String> storeIds = new ArrayList<>(storeIdsSet);
 
             //获取可操作的优惠券集合
             List<MemberCoupon> allScopeMemberCoupon = memberCouponService.getAllScopeMemberCoupon(tradeDTO.getMemberId(), storeIds);
