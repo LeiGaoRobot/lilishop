@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -60,9 +62,10 @@ public class SkuFreightRender implements CartRenderStep {
 
                     //商品id列表
                     List<String> skuIds = freightTemplateGroup.getValue();
+                    Set<String> skuIdSet = new HashSet<>(skuIds);
 
                     //当前购物车商品列表
-                    List<CartSkuVO> currentCartSkus = cartSkuVOS.stream().filter(item -> skuIds.contains(item.getGoodsSku().getId())).collect(Collectors.toList());
+                    List<CartSkuVO> currentCartSkus = cartSkuVOS.stream().filter(item -> skuIdSet.contains(item.getGoodsSku().getId())).collect(Collectors.toList());
 
                     //寻找对应对商品运费计算模版
                     FreightTemplateVO freightTemplate = freightTemplateService.getFreightTemplate(freightTemplateGroup.getKey());
