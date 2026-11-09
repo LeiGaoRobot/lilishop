@@ -61,8 +61,11 @@ public class SkuFreightRender implements CartRenderStep {
                     //商品id列表
                     List<String> skuIds = freightTemplateGroup.getValue();
 
+                    // Optimization: Used Set for O(1) lookups to avoid O(N^2) bottleneck
+                    java.util.Set<String> skuIdSet = new java.util.HashSet<>(skuIds);
+
                     //当前购物车商品列表
-                    List<CartSkuVO> currentCartSkus = cartSkuVOS.stream().filter(item -> skuIds.contains(item.getGoodsSku().getId())).collect(Collectors.toList());
+                    List<CartSkuVO> currentCartSkus = cartSkuVOS.stream().filter(item -> skuIdSet.contains(item.getGoodsSku().getId())).collect(Collectors.toList());
 
                     //寻找对应对商品运费计算模版
                     FreightTemplateVO freightTemplate = freightTemplateService.getFreightTemplate(freightTemplateGroup.getKey());
@@ -81,7 +84,8 @@ public class SkuFreightRender implements CartRenderStep {
                         String addressId = memberAddress.getConsigneeAddressIdPath().split(",")[1];
                         for (FreightTemplateChild templateChild : freightTemplate.getFreightTemplateChildList()) {
                             //模版匹配判定
-                            if (templateChild.getAreaId().contains(addressId)) {
+                            // Optimization: Parsed comma-separated string to List for exact match, preventing partial match correctness bugs
+                            if (java.util.Arrays.asList(templateChild.getAreaId().split(",")).contains(addressId)) {
                                 freightTemplateChild = templateChild;
                                 break;
                             }
