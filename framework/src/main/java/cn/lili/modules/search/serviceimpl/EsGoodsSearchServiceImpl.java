@@ -319,7 +319,8 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
      * @return 分类选择项集合
      */
     private List<SelectorOptions> convertCategoryOptions(List<? extends Terms.Bucket> categoryBuckets) {
-        List<SelectorOptions> categoryOptions = new ArrayList<>();
+        // Optimization: Used LinkedHashSet for O(1) lookups to avoid O(N^2) bottleneck during containment checks
+        Set<SelectorOptions> categoryOptions = new java.util.LinkedHashSet<>();
         for (Terms.Bucket categoryBucket : categoryBuckets) {
             String categoryPath = categoryBucket.getKey().toString();
             ParsedStringTerms categoryNameAgg = categoryBucket.getAggregations().get("categoryNameAgg");
@@ -335,15 +336,13 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
                         SelectorOptions so = new SelectorOptions();
                         so.setName(nameSplit[i]);
                         so.setValue(split[i]);
-                        if (!categoryOptions.contains(so)) {
-                            categoryOptions.add(so);
-                        }
+                        categoryOptions.add(so);
                     }
                 }
             }
 
         }
-        return categoryOptions;
+        return new ArrayList<>(categoryOptions);
     }
 
     /**
@@ -377,6 +376,8 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
     private List<ParamOptions> buildGoodsParamOptions(ParsedStringTerms nameAgg, List<String> nameList) {
         List<ParamOptions> paramOptions = new ArrayList<>();
         List<? extends Terms.Bucket> nameBuckets = nameAgg.getBuckets();
+        // Optimization: Used Set for O(1) lookups to avoid O(N^2) bottleneck
+        Set<String> nameSet = nameList == null ? null : new java.util.HashSet<>(nameList);
 
         for (Terms.Bucket bucket : nameBuckets) {
             String name = bucket.getKey().toString();
@@ -393,7 +394,7 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
                 }
 
             }
-            if (nameList == null || !nameList.contains(name)) {
+            if (nameSet == null || !nameSet.contains(name)) {
                 paramOptions1.setKey(name);
                 paramOptions1.setValues(valueSelectorList);
                 paramOptions.add(paramOptions1);
@@ -584,19 +585,16 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
      */
     private void propSearch(BoolQueryBuilder filterBuilder, EsGoodsSearchDTO searchDTO) {
         String[] props = searchDTO.getProp().split("@");
-        List<String> nameList = new ArrayList<>();
-        List<String> valueList = new ArrayList<>();
+        // Optimization: Used LinkedHashSet for O(1) lookups to avoid O(N^2) bottleneck during containment checks
+        Set<String> nameList = new java.util.LinkedHashSet<>();
+        Set<String> valueList = new java.util.LinkedHashSet<>();
         Map<String, List<String>> valueMap = new HashMap<>(16);
         for (String prop : props) {
             String[] propValues = prop.split("_");
             String name = propValues[0];
             String value = propValues[1];
-            if (!nameList.contains(name)) {
-                nameList.add(name);
-            }
-            if (!valueList.contains(value)) {
-                valueList.add(value);
-            }
+            nameList.add(name);
+            valueList.add(value);
             //将同一规格名下的规格值分组
             if (!valueMap.containsKey(name)) {
                 List<String> values = new ArrayList<>();
@@ -615,8 +613,8 @@ public class EsGoodsSearchServiceImpl implements EsGoodsSearchService {
             }
             filterBuilder.must(shouldBuilder);
         }
-        searchDTO.getNotShowCol().put(ATTR_NAME_KEY, nameList);
-        searchDTO.getNotShowCol().put(ATTR_VALUE_KEY, valueList);
+        searchDTO.getNotShowCol().put(ATTR_NAME_KEY, new ArrayList<>(nameList));
+        searchDTO.getNotShowCol().put(ATTR_VALUE_KEY, new ArrayList<>(valueList));
     }
 
     /**
