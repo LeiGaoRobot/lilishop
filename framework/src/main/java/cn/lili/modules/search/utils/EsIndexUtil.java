@@ -11,9 +11,14 @@ import java.util.Map;
  * @author paulG
  * @since 2021/10/11
  **/
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 public class EsIndexUtil {
 
-    private static final String IGNORE_FIELD = "serialVersionUID,promotionMap,id,goodsId";
+    // Optimization: Used Set for O(1) lookups to avoid O(N^2) bottleneck, and to prevent partial matching bugs (e.g. "id" matching "goodsId")
+    private static final Set<String> IGNORE_FIELD = new HashSet<>(Arrays.asList("serialVersionUID", "promotionMap", "id", "goodsId"));
 
     public static Map<String, Object> getUpdateIndexFieldsMap(EsGoodsIndex queryGoodsIndex, EsGoodsIndex updateGoodsIndex) {
         Map<String, Object> queryFieldsMap = new HashMap<>();
